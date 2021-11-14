@@ -191,3 +191,30 @@ void delete_node_after(LinkedList<T> *list, LinkedListNode<T> *&previous_node){
 		
 	}
 }
+
+// This copies the elements of the source_list to the target_list.
+template<typename T>
+void append_list(LinkedList<T> *target_list, LinkedList<T> *source_list){
+	LinkedListNode<T> *current_node = source_list->first;
+	while(current_node){
+		add_node(target_list, current_node->data);
+		
+		current_node = current_node->next;
+	}
+}
+
+// Copies elements of the source list to the target list starting at a certain node while removing them from the source.
+template<typename T>
+void split_list(LinkedList<T> *target_list, LinkedList<T> *source_list, LinkedListNode<T> *source_previous_to_starting_node){
+	// LinkedList<T> result;
+	
+	LinkedListNode<T> *current_node = source_previous_to_starting_node->next;
+	LinkedListNode<T> *previous_node = source_previous_to_starting_node;
+	while(current_node){
+		add_node(target_list, current_node->data);
+		delete_node_after(source_list, previous_node);
+		
+		previous_node = current_node;
+		current_node = current_node->next;
+	}
+}

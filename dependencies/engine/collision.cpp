@@ -46,15 +46,10 @@ bool DoRectsCollide(Rect b1, Rect b2, V2 *penetration){
 
 }
 
-//This only works for axis aligned bounding boxes.
-// void Bounce(Rect *boundingBox, V2 *velocity, V2 penetration){
-// 	if(penetration.y > 0 || penetration.y < 0) {
-//           boundingBox->y -= penetration.y;
-//           velocity->y *= -1;
-//      }
-//
-//      if(penetration.x > 0 || penetration.x < 0){
-//           boundingBox->x -= penetration.x;
-//           velocity->x *= -1;
-//      }
-// }
+bool DoRectContainsPoint(Rect b, V2 point){
+	if(point.x <= b.x + b.w && point.x >= b.x && point.y <= b.y && point.y >= b.y - b.h){
+		return true;
+	}else{
+		return false;
+	}
+}

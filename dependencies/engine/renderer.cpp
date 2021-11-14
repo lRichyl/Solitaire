@@ -261,6 +261,8 @@ static void render_quad_on_batch(Renderer *renderer, Batch *batch, Rect *positio
      V2 bottom_right_clip;
      float normalizedAlphaValue = alpha_value; // / 255.f;
      Rect final_position;
+	 
+	 
      if(!position){
           final_position = {0.0f, (float)win->internalHeight, (float)win->internalWidth, (float)win->internalHeight};
           // printf("%f %f %f %f", final_position.x, final_position.y, final_position.w, final_position.h);
@@ -306,20 +308,24 @@ static void render_quad_on_batch(Renderer *renderer, Batch *batch, Rect *positio
      //We do this so that if we try to draw outside the window we don't add data to the vertex buffer.
      if((final_position.x + final_position.w >= 0) && (final_position.x <= win->internalWidth) && (final_position.y >= 0) && (final_position.y - final_position.h <= win->internalHeight)){
           // Batch *current_batch = &renderer->main_batch;
-          float texture_slot_id = 0;
-          if(check_if_texture_is_not_registered(*texture, batch)){
-               batch->registered_textures_ids[batch->texture_index] = texture->id;
-               bind_texture(batch->texture_index, texture->id);
-               texture_slot_id = (float)batch->texture_index;
-               batch->texture_index++;
-          }else{
-               for(int i = 0; i < RendererInfo::MAX_TEXTURE_UNITS_PER_BATCH; i++){
-                    if(texture->id == batch->registered_textures_ids[i]){
-                         texture_slot_id = i;
-                         break;
-                    }
-               }
-          }
+			float texture_slot_id = 0;
+			if(texture){
+				if(check_if_texture_is_not_registered(*texture, batch)){
+				   batch->registered_textures_ids[batch->texture_index] = texture->id;
+				   bind_texture(batch->texture_index, texture->id);
+				   texture_slot_id = (float)batch->texture_index;
+				   batch->texture_index++;
+				}else{
+				   for(int i = 0; i < RendererInfo::MAX_TEXTURE_UNITS_PER_BATCH; i++){
+						if(texture->id == batch->registered_textures_ids[i]){
+							 texture_slot_id = i;
+							 break;
+						}
+				   }
+				}
+			}else{
+				texture_slot_id = -1;
+			}
           assert(batch->texture_index <= RendererInfo::MAX_TEXTURE_UNITS_PER_BATCH);
 
 
@@ -396,6 +402,10 @@ void render_quad(Renderer *renderer, Rect *position, Texture *texture, Rect *cli
      Batch *batch = renderer->current_batch;
 
      render_quad_on_batch(renderer, batch, position, texture, clip_region, mirrorX, alpha_value, color, mirrorY);
+}
+
+void render_colored_rect(Renderer *renderer, Rect *position, V3 color, float alpha_value){
+	render_quad(renderer, position, NULL, NULL, false, alpha_value, color);
 }
 
 //Things drawn with this function do no get drawn on the same framebuffer as the main render_quad function so it does not get

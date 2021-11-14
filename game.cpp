@@ -1,5 +1,7 @@
 #include "game.h"
 #include "engine/window.h"
+#include "engine/input.h"
+#include "engine/collision.h"
 // #include "engine/sprite.h"
 
 #include "GLFW/glfw3.h"
@@ -17,25 +19,27 @@ Game::Game(Renderer *r, Window *w){
 	add_texture(&asset_manager, "Cards", make_texture("assets/textures/Solitaire Cards.png"));
 	
 	background.texture = get_texture(&asset_manager, "Background");
-	a.texture = get_texture(&asset_manager, "Cards");
 	
 	init_board(&game_board, w);
-	// game_board.card_sprites[51].position = {500,500};
-	// game_board.flipped_card.position = {200,200};
-	// game_board.foundation_sprite.position = {200,200};
 }
 
 void Game::UpdateGame(float dt){
-	
+	// MousePosition mouse = GetMousePosition(window);
+	// V2 point = {mouse.x, mouse.y};
+	// Rect card_area = game_board.tableau[1].first->data.clickable_area;
+	// printf("Mouse: %f,%f     Area: %f,%f\n", mouse.x, mouse.y, card_area.x, card_area.y);
+	// if(DoRectContainsPoint(card_area, point)){
+		// printf("In card area\n");
+	// }
 }
-// float empty_space = (1280.0f - (168.0f * 7.f));
-// float padding = (empty_space) / 7.f;
 
-static Rect pos = {100,100,42,60};
+static Rect r = {100,100,64,64};
 void Game::DrawGame(float dt, float fps){
+	// Render the board//
 	render_sprite_as_background(renderer, &background);
 	draw_tableau(&game_board, renderer);
 	draw_foundations(&game_board, renderer);
+	////////////////////
 	
 	renderer_draw(renderer);
 	swap_buffers(window);

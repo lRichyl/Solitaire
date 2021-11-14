@@ -58,6 +58,7 @@ void main()
 		case 29: fragColor = texture2D(u_textures[29], outTexCoord); break;
 		case 30: fragColor = texture2D(u_textures[30], outTexCoord); break;
 		case 31: fragColor = texture2D(u_textures[31], outTexCoord); break;
+		default: fragColor = vec4(outColor, 1.0f);
 	}
 	fragColor *= vec4(outColor, 1.0f);
 

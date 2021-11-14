@@ -7,6 +7,37 @@ void print_data(Card *card){
 	printf("{%d , %d}\n", card->type, card->value);
 }
 
+static void set_tableau_cards_positions_and_clickable_areas(Board *board){
+	for(int i = 0; i < TABLEAU_SIZE; i++){
+		float base_y_padding = 37.0f;
+		float sum_y_padding = base_y_padding;
+		LinkedList<Card> *card_stack = &board->tableau[i];
+		LinkedListNode<Card> *previous_node;
+		LinkedListNode<Card> *current_node = card_stack->first;
+		while(current_node){
+			Card *card = &current_node->data;
+			card->position = {board->tableau_x_positions[i], board->tableau_y_starting_pos - sum_y_padding};
+			sum_y_padding += base_y_padding;
+			
+			V2 position = card->position;
+			V2 size = board->cards_size;
+			if(current_node == card_stack->last_node){
+				card->clickable_area = {position.x, position.y, size.x, size.y};
+			}else{
+				card->clickable_area = {position.x, position.y, size.x, base_y_padding};
+			}
+			
+			
+				
+			
+			previous_node = current_node;
+			current_node = current_node->next;
+		}
+		
+	}
+}
+
+
 void init_board(Board *board, Window *window){
 	//Init the plateau, foundations and hand.
 	
@@ -24,6 +55,7 @@ void init_board(Board *board, Window *window){
 	
 	// TODO: This should be done every time we want to start a game;
 	shuffle_cards_to_the_board(board);
+	
 	
 	
 	// We initialize the sprites for all the 52 cards from a single texture.
@@ -68,6 +100,8 @@ void init_board(Board *board, Window *window){
 		board->foundations_x_positions[i] = board->tableau_x_positions[j + i];
 	}
 	
+	// This should be called every time a group of cards is moved to another stack to regenerate their positions and clickable areas.
+	set_tableau_cards_positions_and_clickable_areas(board);
 	
 }
 
@@ -135,34 +169,33 @@ void draw_tableau(Board *board, Renderer *renderer){
 		while(current_node){
 			Card *card = &current_node->data;
 			int card_index = card->type * CARDS_PER_TYPE + card->value;
-			// printf("%d, ", card_index);
-			// float x_position = (board->padding/2.f) + (i * board->padding) + (board->cards_size.x * i);
+			
 			if(card->flipped){
-				render_sprite(renderer, &board->flipped_card, {board->tableau_x_positions[i], board->tableau_y_starting_pos - sum_y_padding});
+				render_sprite(renderer, &board->flipped_card, card->position);
 			}else{
-				render_sprite(renderer, &board->card_sprites[card_index], {board->tableau_x_positions[i], board->tableau_y_starting_pos - sum_y_padding});
+				render_sprite(renderer, &board->card_sprites[card_index], card->position);
 				
 			}
-			sum_y_padding += base_y_padding;
+			
+			// Uncomment this to see the clickable areas of the cards.
+			if(current_node == card_stack->last_node){
+				render_colored_rect(renderer, &card->clickable_area,{255,0,0}, 0.4);
+				//// printf("%f %f\n", card->clickable_area.x, card->clickable_area.y);
+			}else{
+				render_colored_rect(renderer, &card->clickable_area,{0,0,255}, 0.4);
+			}
+
 			
 			previous_node = current_node;
 			current_node = current_node->next;
 		}
 		
-		// printf("\n");
-		
-		// cards.position.x = (padding/2.f) + (i * padding) + (cards.size.x * i);
-		// render_sprite(renderer, &game_board.flipped_card, {600,600});
 	}
 }
 
 void draw_foundations(Board *board, Renderer *renderer){
 	for(int i = 0; i < CardType::COUNT; i++){
-		// if(i == 0){
-			render_sprite(renderer, &board->foundation_sprite, {board->foundations_x_positions[i], renderer->window->internalHeight - board->foundations_y_padding});
-		// }else{
-			// render_sprite(renderer, &board->foundation_sprite, {board->foundations_x_positions[i], renderer->window->internalHeight - foundations_y_padding});
-		// }
+		render_sprite(renderer, &board->foundation_sprite, {board->foundations_x_positions[i], renderer->window->internalHeight - board->foundations_y_padding});
 		
 	}
 }

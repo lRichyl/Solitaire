@@ -56,6 +56,8 @@ MousePosition GetMousePosition(Window *window){
 	
 	result.x = mouseInfo.x * xBufferToWindowFactor;
 	result.y = mouseInfo.y * yBufferToWindowFactor;
+	
+	result.y = window->internalHeight - result.y;
 	// printf("%f , %f , %f\n", xBufferToWindowFactor, result.x, result.y);
 	
 	return result;

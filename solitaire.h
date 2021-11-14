@@ -19,17 +19,14 @@ enum CardType{
 };
 
 struct Card{
-	bool flipped = false;
 	CardType type;
+	bool flipped = false;
 	int value;
 	V2 position = {};
+	Rect clickable_area;
 };
 
 struct Board{
-	//Index 0 is for Hearts
-	//Index 1 is for Diamonds
-	//Index 2 is for Clubs
-	//Index 3 is for Spades
 	LinkedList<Card> tableau[TABLEAU_SIZE];
 	LinkedList<Card> foundations[CardType::COUNT];
 	LinkedList<Card> hand;
@@ -37,6 +34,8 @@ struct Board{
 	Sprite card_sprites[CARDS_TOTAL];
 	Sprite flipped_card;
 	Sprite foundation_sprite;
+	
+	// std::vector<Rect> clickable_positions
 	
 	V2 cards_size = {126, 180};
 	float tableau_empty_space;
