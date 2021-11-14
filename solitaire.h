@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "linked_list.h"
+#include "engine/sprite.h"
 
 static constexpr int CARDS_PER_TYPE = 13;
 static constexpr int CARDS_TOTAL = 52;
@@ -18,8 +19,10 @@ enum CardType{
 };
 
 struct Card{
+	bool flipped = false;
 	CardType type;
 	int value;
+	V2 position = {};
 };
 
 struct Board{
@@ -31,7 +34,21 @@ struct Board{
 	LinkedList<Card> foundations[CardType::COUNT];
 	LinkedList<Card> hand;
 	
+	Sprite card_sprites[CARDS_TOTAL];
+	Sprite flipped_card;
+	Sprite foundation_sprite;
+	
+	V2 cards_size = {126, 180};
+	float tableau_empty_space;
+	float tableau_y_starting_pos = 550;
+	float tableau_x_positions[TABLEAU_SIZE];
+	float padding;
+	
+	float foundations_y_padding = 20;
+	float foundations_x_positions[CardType::COUNT];
 };
 
-void init_board(Board *board);
+void init_board(Board *board, Window *window);
 void shuffle_cards_to_the_board(Board *board);
+void draw_tableau(Board *board, Renderer *renderer);
+void draw_foundations(Board *board, Renderer *renderer);

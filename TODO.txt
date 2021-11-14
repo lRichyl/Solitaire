@@ -1,0 +1,2 @@
+
+- Fix the size of the numbers in the cards and show the type on the right corner.

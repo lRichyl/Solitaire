@@ -259,7 +259,7 @@ static void render_quad_on_batch(Renderer *renderer, Batch *batch, Rect *positio
      V2 bottom_left_clip;
      V2 top_right_clip;
      V2 bottom_right_clip;
-     float normalizedAlphaValue = alpha_value / 255.f;
+     float normalizedAlphaValue = alpha_value; // / 255.f;
      Rect final_position;
      if(!position){
           final_position = {0.0f, (float)win->internalHeight, (float)win->internalWidth, (float)win->internalHeight};
@@ -274,13 +274,13 @@ static void render_quad_on_batch(Renderer *renderer, Batch *batch, Rect *positio
           assert(clip_region->h <= texture->height);
 
           top_left_clip.x     = clip_region->x / texture->width;
-          top_left_clip.y     = (clip_region->y + clip_region->h) / texture->height;
+          top_left_clip.y     = (texture->height - clip_region->y ) / texture->height;
           bottom_left_clip.x  = clip_region->x / texture->width;
-          bottom_left_clip.y  = clip_region->y / texture->height;
+          bottom_left_clip.y  = (texture->height - clip_region->y - clip_region->h )/ texture->height;
           bottom_right_clip.x = (clip_region->x + clip_region->w) / texture->width;
-          bottom_right_clip.y = clip_region->y / texture->height;
+          bottom_right_clip.y = (texture->height - clip_region->y - clip_region->h)/ texture->height;
           top_right_clip.x    = (clip_region->x + clip_region->w) / texture->width;
-          top_right_clip.y    = (clip_region->y + clip_region->h) / texture->height;
+          top_right_clip.y    = (texture->height - clip_region->y) / texture->height;
      }else{
           top_left_clip.x     = 0.0f;
           top_left_clip.y     = 1.0f;
@@ -585,6 +585,7 @@ void make_fragment_shader(const char* path, unsigned int *fragment_shader){
      free(source);
 }
 
+// TODO: Add the ability to choose the type of filter when creating the texture.
 Texture make_texture(const char *path){
      Texture texture;
      texture.data_buffer = stbi_load(path, &texture.width, &texture.height, &texture.channels, 0);
@@ -597,8 +598,8 @@ Texture make_texture(const char *path){
 		glGenTextures(1, &texture.id);
 		// printf("Texture ID: %d\n", texture.id);
 		glBindTexture(GL_TEXTURE_2D, texture.id);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture.width, texture.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)texture.data_buffer);
@@ -608,8 +609,8 @@ Texture make_texture(const char *path){
 		glGenTextures(1, &texture.id);
 		// printf("Texture ID: %d\n", texture.id);
 		glBindTexture(GL_TEXTURE_2D, texture.id);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture.width, texture.height, 0, GL_RGB, GL_UNSIGNED_BYTE, (void*)texture.data_buffer);

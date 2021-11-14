@@ -1,0 +1,3 @@
+
+- Add the ability to set the type of filter we want for a texture when we create it. Right now it is always GL_NEAREST.
+- Add AnimatedSprites.

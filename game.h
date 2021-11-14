@@ -2,6 +2,9 @@
 
 #include "engine/time.h"
 #include "engine/renderer.h"
+#include "engine/asset_manager.h"
+#include "engine/sprite.h"
+
 #include "solitaire.h"
 
 struct Game{
@@ -14,8 +17,10 @@ struct Game{
 	Window *window;
 	bool showFPS = true;
 	
+	static AssetManager asset_manager;
 	Board game_board;
-	Texture background = make_texture("assets/textures/background.jpg");
-	Texture cards      = make_texture("assets/textures/Solitaire Cards.png");
-
+	
+	Sprite background;
+	Sprite a;
+	// Sprite cards;
 };

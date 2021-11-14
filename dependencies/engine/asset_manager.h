@@ -1,9 +1,13 @@
 #pragma once 
+#include <unordered_map>
+#include <string>
+
+#include "renderer.h"
 
 struct AssetManager{
-	// Use a map to add assets.
-	// Reference assets by a string.
 	// Save only textures for the moment.
+	std::unordered_map<std::string, Texture> textures;
 };
 
-void get_texture(&AssetManager *asset_manager, const char *texture_name);
+void add_texture(AssetManager *m, const std::string &name, Texture texture);
+Texture get_texture(AssetManager *m, const std::string &texture_name);
