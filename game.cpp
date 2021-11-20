@@ -24,7 +24,8 @@ Game::Game(Renderer *r, Window *w){
 }
 
 void Game::UpdateGame(float dt){
-	// MousePosition mouse = GetMousePosition(window);
+	MouseInfo mouse = GetMouseInfo(window);
+	PrintMouseInfo(&mouse);
 	// V2 point = {mouse.x, mouse.y};
 	// Rect card_area = game_board.tableau[1].first->data.clickable_area;
 	// printf("Mouse: %f,%f     Area: %f,%f\n", mouse.x, mouse.y, card_area.x, card_area.y);

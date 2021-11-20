@@ -59,8 +59,9 @@ int main(){
 	
 	SetKeyboardCallback(window);
 	SetCursorCallback(window);
+	SetMouseButtonCallback(window);
 	
-	float average_fps = 60;
+	float average_fps;
 
 	// float realfps ;
      while(!glfwWindowShouldClose(window->GLFWInstance)){
