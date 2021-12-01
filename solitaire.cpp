@@ -1,4 +1,5 @@
 #include "solitaire.h"
+#include "engine/collision.h"
 #include "game.h"
 #include <stdlib.h>
 
@@ -9,22 +10,22 @@ void print_data(Card *card){
 
 static void set_tableau_cards_positions_and_clickable_areas(Board *board){
 	for(int i = 0; i < TABLEAU_SIZE; i++){
-		float base_y_padding = 37.0f;
-		float sum_y_padding = base_y_padding;
+		// float base_y_padding = 37.0f;
+		float sum_y_padding = board->base_y_padding;
 		LinkedList<Card> *card_stack = &board->tableau[i];
 		LinkedListNode<Card> *previous_node;
 		LinkedListNode<Card> *current_node = card_stack->first;
 		while(current_node){
 			Card *card = &current_node->data;
 			card->position = {board->tableau_x_positions[i], board->tableau_y_starting_pos - sum_y_padding};
-			sum_y_padding += base_y_padding;
+			sum_y_padding += board->base_y_padding;
 			
 			V2 position = card->position;
 			V2 size = board->cards_size;
 			if(current_node == card_stack->last_node){
 				card->clickable_area = {position.x, position.y, size.x, size.y};
 			}else{
-				card->clickable_area = {position.x, position.y, size.x, base_y_padding};
+				card->clickable_area = {position.x, position.y, size.x, board->base_y_padding};
 			}
 			
 			
@@ -103,6 +104,8 @@ void init_board(Board *board, Window *window){
 	// This should be called every time a group of cards is moved to another stack to regenerate their positions and clickable areas.
 	set_tableau_cards_positions_and_clickable_areas(board);
 	
+	init_linked_list(&board->held_cards, 15);
+	
 }
 
 
@@ -127,11 +130,11 @@ void shuffle_cards_to_the_board(Board *board){
 			
 			// This find_node_by_position and delete_node_by_position are slow but we don't care because it is only run once at the start of the game.
 			Card *card = find_node_by_position(&cards, random_card);
-			if(first){
-				card->flipped = false;
-			}else{
-				card->flipped = true;
-			}
+			// if(first){
+				// card->flipped = false;
+			// }else{
+				// card->flipped = true;
+			// }
 			first = false;
 			add_node(&board->tableau[j + i], *card);
 			delete_node_by_position(&cards, random_card);
@@ -161,8 +164,8 @@ void shuffle_cards_to_the_board(Board *board){
 void draw_tableau(Board *board, Renderer *renderer){
 	
 	for(int i = 0; i < TABLEAU_SIZE; i++){
-		float base_y_padding = 37.0f;
-		float sum_y_padding = base_y_padding;
+		// float base_y_padding = 37.0f;
+		// float sum_y_padding = base_y_padding;
 		LinkedList<Card> *card_stack = &board->tableau[i];
 		LinkedListNode<Card> *previous_node;
 		LinkedListNode<Card> *current_node = card_stack->first;
@@ -178,12 +181,12 @@ void draw_tableau(Board *board, Renderer *renderer){
 			}
 			
 			// Uncomment this to see the clickable areas of the cards.
-			if(current_node == card_stack->last_node){
-				render_colored_rect(renderer, &card->clickable_area,{255,0,0}, 0.4);
-				//// printf("%f %f\n", card->clickable_area.x, card->clickable_area.y);
-			}else{
-				render_colored_rect(renderer, &card->clickable_area,{0,0,255}, 0.4);
-			}
+			// if(current_node == card_stack->last_node){
+				// render_colored_rect(renderer, &card->clickable_area,{255,0,0}, 0.4);
+				// printf("%f %f\n", card->clickable_area.x, card->clickable_area.y);
+			// }else{
+				// render_colored_rect(renderer, &card->clickable_area,{0,0,255}, 0.4);
+			// }
 
 			
 			previous_node = current_node;
@@ -193,9 +196,55 @@ void draw_tableau(Board *board, Renderer *renderer){
 	}
 }
 
+void draw_held_cards(Board *board, Renderer *renderer, V2 mouse_pos, V2 mouse_card_delta){
+	LinkedListNode<Card> *previous_node;
+	LinkedListNode<Card> *current_node = board->held_cards.first;
+	// V2 delta = {mouse_pos.x - current_node->data.position.x, mouse_pos.y - current_node->data.position.y};
+	V2 drawing_position = {mouse_pos.x - mouse_card_delta.x, mouse_pos.y - mouse_card_delta.y};
+	printf("%f, %f\n", mouse_pos.x, mouse_pos.y);
+	while(current_node){
+		Card *card = &current_node->data;
+		int card_index = card->type * CARDS_PER_TYPE + card->value;
+		
+		render_sprite(renderer, &board->card_sprites[card_index], drawing_position);
+		drawing_position.y -= board->base_y_padding;
+		
+		previous_node = current_node;
+		current_node = current_node->next;
+	}
+}
+
 void draw_foundations(Board *board, Renderer *renderer){
 	for(int i = 0; i < CardType::COUNT; i++){
 		render_sprite(renderer, &board->foundation_sprite, {board->foundations_x_positions[i], renderer->window->internalHeight - board->foundations_y_padding});
 		
 	}
+}
+
+void get_list_and_card_mouse_is_over(Board *board, MouseInfo *mouse, LinkedList<Card> **list_result, Card **card_result, LinkedListNode<Card> **node_to_split_from){
+	// Card *result = NULL;
+	for(int i = 0; i < TABLEAU_SIZE; i++){
+		LinkedList<Card> *card_list = &board->tableau[i];
+		
+		LinkedListNode<Card> *previous_node = NULL;
+		LinkedListNode<Card> *current_node = card_list->first;
+		while(current_node){
+			Card *card = &current_node->data;
+			
+			V2 mouse_pos = {(float)mouse->x, (float)mouse->y};
+			if(DoRectContainsPoint(card->clickable_area, mouse_pos)){
+				// printf("%d\n",i);
+				*card_result = card;
+				*list_result = card_list;
+				*node_to_split_from = previous_node;
+				return;
+			}
+			
+			previous_node = current_node;
+			current_node = current_node->next;
+		}
+	}
+	*card_result = NULL;
+	*list_result = NULL;
+	*node_to_split_from = NULL;
 }

@@ -214,7 +214,22 @@ void split_list(LinkedList<T> *target_list, LinkedList<T> *source_list, LinkedLi
 		add_node(target_list, current_node->data);
 		delete_node_after(source_list, previous_node);
 		
-		previous_node = current_node;
+		// previous_node = current_node;
 		current_node = current_node->next;
 	}
+}
+
+template<typename T>
+void clear_list(LinkedList<T> *list){
+	LinkedListNode<T> *current_node = list->first;
+	LinkedListNode<T> *next_node = NULL;
+	while(current_node){
+		list->size--;
+		next_node = current_node->next;
+		free_from_arena(&list->arena, current_node);
+		
+		current_node = next_node;
+	}
+	list->first = NULL;
+	list->last_node = NULL;	
 }
