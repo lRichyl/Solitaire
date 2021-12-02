@@ -181,12 +181,12 @@ void draw_tableau(Board *board, Renderer *renderer){
 			}
 			
 			// Uncomment this to see the clickable areas of the cards.
-			// if(current_node == card_stack->last_node){
-				// render_colored_rect(renderer, &card->clickable_area,{255,0,0}, 0.4);
+			if(current_node == card_stack->last_node){
+				render_colored_rect(renderer, &card->clickable_area,{255,0,0}, 0.4);
 				// printf("%f %f\n", card->clickable_area.x, card->clickable_area.y);
-			// }else{
-				// render_colored_rect(renderer, &card->clickable_area,{0,0,255}, 0.4);
-			// }
+			}else{
+				render_colored_rect(renderer, &card->clickable_area,{0,0,255}, 0.4);
+			}
 
 			
 			previous_node = current_node;
@@ -201,7 +201,7 @@ void draw_held_cards(Board *board, Renderer *renderer, V2 mouse_pos, V2 mouse_ca
 	LinkedListNode<Card> *current_node = board->held_cards.first;
 	// V2 delta = {mouse_pos.x - current_node->data.position.x, mouse_pos.y - current_node->data.position.y};
 	V2 drawing_position = {mouse_pos.x - mouse_card_delta.x, mouse_pos.y - mouse_card_delta.y};
-	printf("%f, %f\n", mouse_pos.x, mouse_pos.y);
+	// printf("%f, %f\n", mouse_pos.x, mouse_pos.y);
 	while(current_node){
 		Card *card = &current_node->data;
 		int card_index = card->type * CARDS_PER_TYPE + card->value;

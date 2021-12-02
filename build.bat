@@ -1,1 +1,1 @@
-g++  -O0 *.cpp glad.c dependencies/engine/*.cpp -o game.exe -Idependencies/glfw/include -Idependencies/  -Idependencies/glad/include -Idependencies/glm/ -Idependencies/stb/  -Ldependencies/glfw/lib -lglfw3 -lmingw32 -lopengl32 -lgdi32
+g++ -g -O0 *.cpp glad.c dependencies/engine/*.cpp -o game.exe -Idependencies/glfw/include -Idependencies/  -Idependencies/glad/include -Idependencies/glm/ -Idependencies/stb/  -Ldependencies/glfw/lib -lglfw3 -lmingw32 -lopengl32 -lgdi32

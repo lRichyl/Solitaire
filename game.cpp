@@ -26,18 +26,20 @@ Game::Game(Renderer *r, Window *w){
 
 MouseInfo mouse;
 V2 delta;
+LinkedList<Card> *hovered_list = NULL;
+LinkedListNode<Card> *node_to_split_from = NULL;
+Card *hovered_card = NULL;
 
 void Game::UpdateGame(float dt){
 	mouse = GetMouseInfo(window);
 	V2 mouse_pos = {(float)mouse.x, (float)mouse.y};
-	LinkedList<Card> *hovered_list = NULL;
-	LinkedListNode<Card> *node_to_split_from = NULL;
-	Card *hovered_card = NULL;
+	
 	
 	// PrintMouseInfo(&mouse);
 	
 	switch(mouse.left.state){
 		case MOUSE_PRESSED:{
+			// TODO: If the hovered card is flipped we cannot grab the stack.
 			// get_list_and_card_mouse_is_over(&game_board, &mouse, &hovered_list, &hovered_card, &node_to_split_from);
 			hovered_card = NULL;
 			hovered_list = NULL;
@@ -58,12 +60,11 @@ void Game::UpdateGame(float dt){
 						hovered_card = card;
 						hovered_list = card_list;
 						node_to_split_from = previous_node;
-						clear_list(&game_board.held_cards);
+						// clear_list(&game_board.held_cards);
 						
 						delta = {mouse_pos.x - hovered_card->position.x, mouse_pos.y - hovered_card->position.y};
 						if(card_counter != 0){
 							// printf("%d\n",i);
-							
 							
 							// printf("Selected card: %d, %d\n", (int)hovered_card->type, hovered_card->value);
 				
@@ -71,19 +72,23 @@ void Game::UpdateGame(float dt){
 							// print_linked_list(hovered_list);
 							
 							assert(node_to_split_from);
-							game_board.held_cards_origin = hovered_list;
+							// game_board.held_cards_origin = hovered_list;
 							split_list(&game_board.held_cards, hovered_list, node_to_split_from);
+							print_linked_list(hovered_list);
+
 								
-							break;
+							
 						}else{
 							
 							//If we grab the bottom card, we dont split, we copy the origin list and clear it.
 							append_list(&game_board.held_cards, hovered_list);
-							print_linked_list(&game_board.held_cards);
+							// print_linked_list(&game_board.held_cards);
 							clear_list(hovered_list);
-							break;
-						}
+							print_linked_list(hovered_list);
+
 							
+						}
+						break;
 
 					}
 					card_counter++;
@@ -99,7 +104,14 @@ void Game::UpdateGame(float dt){
 		
 		
 		case MOUSE_RELEASED:{
-			
+			if(hovered_list){
+				append_list(hovered_list, &game_board.held_cards);
+				clear_list(&game_board.held_cards);
+				
+				
+				
+			}
+			// TODO: Recalculate the clickable areas.
 			
 			break;
 		}

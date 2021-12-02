@@ -1,1 +1,1 @@
-g++  -O0 *.cpp -Idependencies -Idependencies/glad/include -Idependencies/glm -Idependencies/glfw/include -Idependencies/stb -o game.exe -lengine.dll
+g++  -g -O0 *.cpp -Idependencies -Idependencies/glad/include -Idependencies/glm -Idependencies/glfw/include -Idependencies/stb -o game.exe -lengine.dll

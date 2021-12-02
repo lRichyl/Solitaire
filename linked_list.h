@@ -188,7 +188,8 @@ void delete_node_after(LinkedList<T> *list, LinkedListNode<T> *&previous_node){
 			free_from_arena(&list->arena, delete_node);
 			list->size--;
 		}
-		
+		list->last_node = previous_node;
+
 	}
 }
 
@@ -215,7 +216,7 @@ void split_list(LinkedList<T> *target_list, LinkedList<T> *source_list, LinkedLi
 		delete_node_after(source_list, previous_node);
 		
 		// previous_node = current_node;
-		current_node = current_node->next;
+		current_node = previous_node->next;
 	}
 }
 
