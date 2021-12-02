@@ -39,8 +39,6 @@ void Game::UpdateGame(float dt){
 	
 	switch(mouse.left.state){
 		case MOUSE_PRESSED:{
-			// TODO: If the hovered card is flipped we cannot grab the stack.
-			// get_list_and_card_mouse_is_over(&game_board, &mouse, &hovered_list, &hovered_card, &node_to_split_from);
 			hovered_card = NULL;
 			hovered_list = NULL;
 			node_to_split_from = NULL;
@@ -55,8 +53,7 @@ void Game::UpdateGame(float dt){
 				while(current_node){
 					Card *card = &current_node->data;
 					
-					// V2 mouse_pos = {(float)mouse.x, (float)mouse.y};
-					if(DoRectContainsPoint(card->clickable_area, mouse_pos)){
+					if(DoRectContainsPoint(card->clickable_area, mouse_pos) && !card->flipped){
 						hovered_card = card;
 						hovered_list = card_list;
 						node_to_split_from = previous_node;
@@ -88,6 +85,9 @@ void Game::UpdateGame(float dt){
 
 							
 						}
+						
+						// Recalculate the clickable areas.
+						calculate_tableau_cards_positions_and_clickable_areas(&game_board);
 						break;
 
 					}
@@ -108,10 +108,9 @@ void Game::UpdateGame(float dt){
 				append_list(hovered_list, &game_board.held_cards);
 				clear_list(&game_board.held_cards);
 				
-				
-				
+				// Recalculate the clickable areas.
+				calculate_tableau_cards_positions_and_clickable_areas(&game_board);
 			}
-			// TODO: Recalculate the clickable areas.
 			
 			break;
 		}

@@ -8,7 +8,7 @@ void print_data(Card *card){
 	printf("{%d , %d}\n", card->type, card->value);
 }
 
-static void set_tableau_cards_positions_and_clickable_areas(Board *board){
+void calculate_tableau_cards_positions_and_clickable_areas(Board *board){
 	for(int i = 0; i < TABLEAU_SIZE; i++){
 		// float base_y_padding = 37.0f;
 		float sum_y_padding = board->base_y_padding;
@@ -102,7 +102,7 @@ void init_board(Board *board, Window *window){
 	}
 	
 	// This should be called every time a group of cards is moved to another stack to regenerate their positions and clickable areas.
-	set_tableau_cards_positions_and_clickable_areas(board);
+	calculate_tableau_cards_positions_and_clickable_areas(board);
 	
 	init_linked_list(&board->held_cards, 15);
 	
@@ -130,11 +130,11 @@ void shuffle_cards_to_the_board(Board *board){
 			
 			// This find_node_by_position and delete_node_by_position are slow but we don't care because it is only run once at the start of the game.
 			Card *card = find_node_by_position(&cards, random_card);
-			// if(first){
-				// card->flipped = false;
-			// }else{
-				// card->flipped = true;
-			// }
+			if(first){
+				card->flipped = false;
+			}else{
+				card->flipped = true;
+			}
 			first = false;
 			add_node(&board->tableau[j + i], *card);
 			delete_node_by_position(&cards, random_card);
@@ -221,30 +221,3 @@ void draw_foundations(Board *board, Renderer *renderer){
 	}
 }
 
-void get_list_and_card_mouse_is_over(Board *board, MouseInfo *mouse, LinkedList<Card> **list_result, Card **card_result, LinkedListNode<Card> **node_to_split_from){
-	// Card *result = NULL;
-	for(int i = 0; i < TABLEAU_SIZE; i++){
-		LinkedList<Card> *card_list = &board->tableau[i];
-		
-		LinkedListNode<Card> *previous_node = NULL;
-		LinkedListNode<Card> *current_node = card_list->first;
-		while(current_node){
-			Card *card = &current_node->data;
-			
-			V2 mouse_pos = {(float)mouse->x, (float)mouse->y};
-			if(DoRectContainsPoint(card->clickable_area, mouse_pos)){
-				// printf("%d\n",i);
-				*card_result = card;
-				*list_result = card_list;
-				*node_to_split_from = previous_node;
-				return;
-			}
-			
-			previous_node = current_node;
-			current_node = current_node->next;
-		}
-	}
-	*card_result = NULL;
-	*list_result = NULL;
-	*node_to_split_from = NULL;
-}

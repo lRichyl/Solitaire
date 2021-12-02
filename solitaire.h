@@ -57,11 +57,9 @@ void print_data(Card *card);
 
 void init_board(Board *board, Window *window);
 void shuffle_cards_to_the_board(Board *board);
+void calculate_tableau_cards_positions_and_clickable_areas(Board *board);
 
 // Implement this two functions.
-void split_cards(LinkedList<Card> *colliding_card_list, LinkedList<Card> *target_list);
-LinkedList<Card> *mouse_press_on_card_list(Board *board, MouseInfo *mouse_info);
-void get_list_and_card_mouse_is_over(Board *board, MouseInfo *mouse, LinkedList<Card> **card_list, Card **card, LinkedListNode<Card> **node_to_split_from);
 
 void draw_tableau(Board *board, Renderer *renderer);
 void draw_foundations(Board *board, Renderer *renderer);
