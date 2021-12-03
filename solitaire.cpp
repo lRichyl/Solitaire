@@ -42,7 +42,6 @@ void calculate_tableau_cards_positions_and_clickable_areas(Board *board){
 void init_board(Board *board, Window *window){
 	//Init the plateau, foundations and hand.
 	
-	
 	//When the game is restarted, this lists have to be cleared.
 	for(int i = 0; i < TABLEAU_SIZE; i++){
 		init_linked_list(&board->tableau[i], MAX_STACK_SIZE);
@@ -90,9 +89,10 @@ void init_board(Board *board, Window *window){
 	// This are used to rendered the tableau cards spaced correctly. 
 	board->tableau_empty_space = window->internalWidth - (board->cards_size.x * TABLEAU_SIZE);
 	board->padding = board->tableau_empty_space / TABLEAU_SIZE;
+	board->starting_x_padding = board->padding/2.f;
 	
 	for(int i = 0; i < TABLEAU_SIZE; i++){
-		board->tableau_x_positions[i] = (board->padding/2.f) + (i * board->padding) + (board->cards_size.x * i);
+		board->tableau_x_positions[i] = board->starting_x_padding + (i * board->padding) + (board->cards_size.x * i);
 	}
 	
 	int j = 3;
@@ -103,6 +103,11 @@ void init_board(Board *board, Window *window){
 	
 	// This should be called every time a group of cards is moved to another stack to regenerate their positions and clickable areas.
 	calculate_tableau_cards_positions_and_clickable_areas(board);
+	
+		
+	// The stock is initialized. This is just the the part you click on to get the next card.
+	board->stock.bounding_box = {board->starting_x_padding, window->internalHeight - board->foundations_y_padding, board->cards_size.x, board->cards_size.y};
+	board->stock.sprite = &board->flipped_card;
 	
 	init_linked_list(&board->held_cards, 15);
 	
@@ -219,5 +224,12 @@ void draw_foundations(Board *board, Renderer *renderer){
 		render_sprite(renderer, &board->foundation_sprite, {board->foundations_x_positions[i], renderer->window->internalHeight - board->foundations_y_padding});
 		
 	}
+}
+
+void draw_stock(Board *board, Renderer *renderer){
+	Rect *stock_bbox = &board->stock.bounding_box;
+	static Rect shadow_bbox = {stock_bbox->x + 5, stock_bbox->y - 5, stock_bbox->w, stock_bbox->h};
+	render_colored_rect(renderer, &shadow_bbox,{0,0,0}); // Render a shadow below the stock.
+	render_sprite(renderer, board->stock.sprite, {board->stock.bounding_box.x, board->stock.bounding_box.y});
 }
 

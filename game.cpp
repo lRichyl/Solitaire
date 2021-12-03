@@ -25,24 +25,25 @@ Game::Game(Renderer *r, Window *w){
 }
 
 MouseInfo mouse;
-V2 delta;
+V2 mouse_card_pos_delta;
 LinkedList<Card> *hovered_list = NULL;
 LinkedListNode<Card> *node_to_split_from = NULL;
 Card *hovered_card = NULL;
+
 
 void Game::UpdateGame(float dt){
 	mouse = GetMouseInfo(window);
 	V2 mouse_pos = {(float)mouse.x, (float)mouse.y};
 	
 	
-	// PrintMouseInfo(&mouse);
-	
 	switch(mouse.left.state){
 		case MOUSE_PRESSED:{
+			////////////////////Check if mouse is clicked on a tableau's card////////////////////////////////////
 			hovered_card = NULL;
 			hovered_list = NULL;
 			node_to_split_from = NULL;
 			game_board.held_cards_origin = NULL;
+			
 			for(int i = 0; i < TABLEAU_SIZE; i++){
 				LinkedList<Card> *card_list = &game_board.tableau[i];
 				
@@ -59,7 +60,7 @@ void Game::UpdateGame(float dt){
 						node_to_split_from = previous_node;
 						// clear_list(&game_board.held_cards);
 						
-						delta = {mouse_pos.x - hovered_card->position.x, mouse_pos.y - hovered_card->position.y};
+						mouse_card_pos_delta = {mouse_pos.x - hovered_card->position.x, mouse_pos.y - hovered_card->position.y};
 						if(card_counter != 0){
 							// printf("%d\n",i);
 							
@@ -97,6 +98,25 @@ void Game::UpdateGame(float dt){
 				}
 			}
 			
+			/////////////////////Check if the stock is clicked on////////////////////
+			if(DoRectContainsPoint(game_board.stock.bounding_box, mouse_pos)){
+				if(game_board.stock_card_index != 0){
+					assert(game_board.current_stock_card);
+					game_board.current_stock_card = game_board.current_stock_card->next;
+					game_board.stock_card_index++;
+					
+					if(game_board.stock_card_index > game_board.hand.size){
+						game_board.stock_card_index = 0;
+					}
+					
+				}else{
+					
+					game_board.current_stock_card = game_board.hand.first;
+					game_board.stock_card_index++;
+				}
+			}
+			
+			
 			
 			break;
 		}
@@ -119,23 +139,37 @@ void Game::UpdateGame(float dt){
 	
 }
 
-static Rect r = {100,100,64,64};
 void Game::DrawGame(float dt, float fps){
 	// Render the board//
 	render_sprite_as_background(renderer, &background);
 	draw_tableau(&game_board, renderer);
 	draw_foundations(&game_board, renderer);
+	draw_stock(&game_board, renderer);
 	
+	
+	//Render the held cards.
 	switch(mouse.left.state){
 		case MOUSE_HELD:{
 			V2 mouse_pos = {(float)mouse.x, (float)mouse.y};
-			draw_held_cards(&game_board, renderer, mouse_pos, delta);
+			draw_held_cards(&game_board, renderer, mouse_pos, mouse_card_pos_delta);
 			// print_linked_list(&game_board.held_cards);
 			
 			// PrintMouseInfo(&mouse);
 			
 			break;
 		}
+	}
+	
+	Rect *stock_bbox = &game_board.stock.bounding_box;
+	static V2 pos = {stock_bbox->x + stock_bbox->w + game_board.padding, stock_bbox->y};
+
+	
+	if(game_board.stock_card_index != 0){
+		Card *card = &game_board.current_stock_card->data;
+		int card_index = card->type * CARDS_PER_TYPE + card->value;
+		render_sprite(renderer, &game_board.card_sprites[card_index], pos);
+	}else{
+		render_sprite(renderer, &game_board.foundation_sprite, pos);
 	}
 	
 	////////////////////

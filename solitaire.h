@@ -27,6 +27,11 @@ struct Card{
 	Rect clickable_area;
 };
 
+struct Stock{
+	Rect bounding_box;
+	Sprite *sprite;
+};
+
 
 struct Board{
 	LinkedList<Card> tableau[TABLEAU_SIZE];
@@ -40,6 +45,8 @@ struct Board{
 	Sprite flipped_card;
 	Sprite foundation_sprite;
 	
+	Stock stock;
+	
 	// std::vector<Rect> clickable_positions
 	
 	V2 cards_size = {126, 180};
@@ -48,9 +55,13 @@ struct Board{
 	float base_y_padding = 37.0f;
 	float tableau_x_positions[TABLEAU_SIZE];
 	float padding;
+	float starting_x_padding;
 	
 	float foundations_y_padding = 20;
 	float foundations_x_positions[CardType::COUNT];
+	
+	int stock_card_index = 0;
+	LinkedListNode<Card> *current_stock_card = NULL;
 };
 
 void print_data(Card *card);
@@ -63,4 +74,5 @@ void calculate_tableau_cards_positions_and_clickable_areas(Board *board);
 
 void draw_tableau(Board *board, Renderer *renderer);
 void draw_foundations(Board *board, Renderer *renderer);
+void draw_stock(Board *board, Renderer *renderer);
 void draw_held_cards(Board *board, Renderer *renderer, V2 mouse_pos, V2 mouse_card_delta);
