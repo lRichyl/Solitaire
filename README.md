@@ -11,3 +11,6 @@ Defining the clickable areas.
 
 Cards can know be dragged.
 ![Captura de pantalla (74)](https://user-images.githubusercontent.com/66743720/144151995-85688aa7-bd6f-4d76-b9d1-47c810090a6b.png)
+
+Cards can be grabbed from the hand.
+![Captura de pantalla (76)](https://user-images.githubusercontent.com/66743720/144724738-67e4170e-a903-4a1c-99fc-292c6b00ebe4.png)
