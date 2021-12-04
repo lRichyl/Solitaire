@@ -39,7 +39,6 @@ struct Board{
 	LinkedList<Card> hand;
 	
 	LinkedList<Card> held_cards;
-	LinkedList<Card> *held_cards_origin;
 	
 	Sprite card_sprites[CARDS_TOTAL];
 	Sprite flipped_card;
@@ -62,6 +61,9 @@ struct Board{
 	
 	int stock_card_index = 0;
 	LinkedListNode<Card> *current_stock_card = NULL;
+    LinkedListNode<Card> *previous_hand_card = NULL;
+    Rect hand_card_bounding_box;
+    bool is_hand_card_held = false;
 };
 
 void print_data(Card *card);

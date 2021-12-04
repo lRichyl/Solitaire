@@ -107,9 +107,13 @@ void init_board(Board *board, Window *window){
         
     // The stock is initialized. This is just the the part you click on to get the next card.
     board->stock.bounding_box = {board->starting_x_padding, window->internalHeight - board->foundations_y_padding, board->cards_size.x, board->cards_size.y};
+    Rect *bbox = &board->stock.bounding_box;
     board->stock.sprite = &board->flipped_card;
+
+    board->hand_card_bounding_box = {bbox->x + bbox->w + board->padding, bbox->y, board->cards_size.x, board->cards_size.y};
+    board->current_stock_card = board->hand.first;
     
-    init_linked_list(&board->held_cards, 15);
+    init_linked_list(&board->held_cards, 30);
     
 }
 

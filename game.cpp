@@ -42,7 +42,7 @@ void Game::UpdateGame(float dt){
             hovered_card = NULL;
             hovered_list = NULL;
             node_to_split_from = NULL;
-            game_board.held_cards_origin = NULL;
+            // game_board.held_cards_origin = NULL;
             
             for(int i = 0; i < TABLEAU_SIZE; i++){
                 LinkedList<Card> *card_list = &game_board.tableau[i];
@@ -72,7 +72,7 @@ void Game::UpdateGame(float dt){
                             assert(node_to_split_from);
                             // game_board.held_cards_origin = hovered_list;
                             split_list(&game_board.held_cards, hovered_list, node_to_split_from);
-                            print_linked_list(hovered_list);
+                            // print_linked_list(hovered_list);
 
                                 
                             
@@ -82,7 +82,7 @@ void Game::UpdateGame(float dt){
                             append_list(&game_board.held_cards, hovered_list);
                             // print_linked_list(&game_board.held_cards);
                             clear_list(hovered_list);
-                            print_linked_list(hovered_list);
+                            // print_linked_list(hovered_list);
 
                             
                         }
@@ -98,23 +98,47 @@ void Game::UpdateGame(float dt){
                 }
             }
             
+            // static LinkedListNode<Card> *previous_hand_card = NULL;
             /////////////////////Check if the stock is clicked on////////////////////
+            if(game_board.stock_card_index >= game_board.hand.size){
+                game_board.stock_card_index = 0;
+                game_board.current_stock_card = game_board.hand.first;
+            }
             if(DoRectContainsPoint(game_board.stock.bounding_box, mouse_pos)){
-                if(game_board.stock_card_index != 0){
+                
+                
+                if(game_board.hand.size >= 1){
                     assert(game_board.current_stock_card);
+                    game_board.previous_hand_card = game_board.current_stock_card;
                     game_board.current_stock_card = game_board.current_stock_card->next;
-                    game_board.stock_card_index++;
                     
-                    if(game_board.stock_card_index > game_board.hand.size){
-                        game_board.stock_card_index = 0;
-                    }
+                    
                     
                 }else{
+                    game_board.previous_hand_card = NULL;
+                    // game_board.current_stock_card = game_board.hand.first;
                     
-                    game_board.current_stock_card = game_board.hand.first;
-                    game_board.stock_card_index++;
                 }
-            }   
+                game_board.stock_card_index++;
+                
+            } 
+            
+            //////////Check if a hand card is clicked on/////////////////
+            if(DoRectContainsPoint(game_board.hand_card_bounding_box, mouse_pos) && game_board.hand.size > 0 && !game_board.is_hand_card_held){
+                add_node(&game_board.held_cards, game_board.current_stock_card->data);
+                // if(game_board.stock_card_index != game_board.hand.size){
+                    game_board.current_stock_card = game_board.current_stock_card->next;
+                    
+                // }
+                if(game_board.previous_hand_card){
+                    delete_node_after(&game_board.hand, game_board.previous_hand_card);
+                }else{
+                    pop_from_list(&game_board.hand);
+                }
+                
+                game_board.is_hand_card_held = true;
+                game_board.stock_card_index--;
+            }
             
             
             
@@ -130,6 +154,19 @@ void Game::UpdateGame(float dt){
                 
                 // Recalculate the clickable areas.
                 calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+            }else if(game_board.is_hand_card_held){
+                // append_list(&game_board.hand, &game_board.held_cards);
+                LinkedListNode<Card> *card;
+                if(game_board.previous_hand_card){
+                    card = add_node_after(&game_board.hand, game_board.held_cards.first->data, game_board.previous_hand_card);
+                    
+                }else{
+                    card = add_node_to_beginning(&game_board.hand, game_board.held_cards.first->data);
+                }
+                game_board.current_stock_card = card;
+                clear_list(&game_board.held_cards);
+                game_board.is_hand_card_held = false;
+				game_board.stock_card_index++;
             }
             
             break;
@@ -146,6 +183,19 @@ void Game::DrawGame(float dt, float fps){
     draw_foundations(&game_board, renderer);
     draw_stock(&game_board, renderer);
     
+    // Draw the stock and hand.
+    // Rect *stock_bbox = &game_board.stock.bounding_box;
+    static V2 pos = {game_board.hand_card_bounding_box.x, game_board.hand_card_bounding_box.y};
+
+    
+    if(game_board.hand.size > 0 && game_board.current_stock_card){
+        Card *card = &game_board.current_stock_card->data;
+        int card_index = card->type * CARDS_PER_TYPE + card->value;
+        render_sprite(renderer, &game_board.card_sprites[card_index], pos);
+    }else{
+        render_sprite(renderer, &game_board.foundation_sprite, pos);
+    }
+    
     
     //Render the held cards.
     switch(mouse.left.state){
@@ -160,17 +210,7 @@ void Game::DrawGame(float dt, float fps){
         }
     }
     
-    Rect *stock_bbox = &game_board.stock.bounding_box;
-    static V2 pos = {stock_bbox->x + stock_bbox->w + game_board.padding, stock_bbox->y};
-
     
-    if(game_board.stock_card_index != 0){
-        Card *card = &game_board.current_stock_card->data;
-        int card_index = card->type * CARDS_PER_TYPE + card->value;
-        render_sprite(renderer, &game_board.card_sprites[card_index], pos);
-    }else{
-        render_sprite(renderer, &game_board.foundation_sprite, pos);
-    }
     
     ////////////////////
     
