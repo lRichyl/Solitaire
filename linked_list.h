@@ -200,14 +200,14 @@ void delete_node_after(LinkedList<T> *list, LinkedListNode<T> *&previous_node){
 // This copies the elements of the source_list to the target_list.
 template<typename T>
 void append_list(LinkedList<T> *target_list, LinkedList<T> *source_list){
-	// LinkedListNode<T> *current_node = source_list->first;
-	// while(current_node){
-		// add_node(target_list, current_node->data);
+	LinkedListNode<T> *current_node = source_list->first;
+	while(current_node){
+		add_node(target_list, current_node->data);
 		
-		// current_node = current_node->next;
-	// }
-	target_list->last_node->next = source_list->first;
-	target_list->size += source_list->size;
+		current_node = current_node->next;
+	}
+	// target_list->last_node->next = source_list->first;
+	// target_list->size += source_list->size;
 }
 
 // Copies elements of the source list to the target list starting at a certain node while removing them from the source.

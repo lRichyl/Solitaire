@@ -8,7 +8,7 @@
 static constexpr int CARDS_PER_TYPE = 13;
 static constexpr int CARDS_TOTAL = 52;
 static constexpr int TABLEAU_SIZE = 7;
-static constexpr int MAX_STACK_SIZE = 10;
+static constexpr int MAX_STACK_SIZE = 20;
 static constexpr int MAX_HAND_SIZE = 24;
 
 enum CardType{

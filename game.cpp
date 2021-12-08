@@ -101,21 +101,23 @@ void Game::UpdateGame(float dt){
             /////////////////////Check if the stock is clicked on////////////////////
             if(DoRectContainsPoint(game_board.stock.bounding_box, mouse_pos)){
                 
-                
-                if(game_board.stock_cycle_completed){
-					game_board.previous_hand_card = NULL;
-                    game_board.current_stock_card = game_board.hand.first;
-					game_board.stock_cycle_completed = false;
-                }else{
-					assert(game_board.current_stock_card);
-                    game_board.previous_hand_card = game_board.current_stock_card;
-                    game_board.current_stock_card = game_board.current_stock_card->next;
+                if(game_board.hand.size > 0){
+					if(game_board.stock_cycle_completed){
+						game_board.previous_hand_card = NULL;
+						game_board.current_stock_card = game_board.hand.first;
+						game_board.stock_cycle_completed = false;
+					}else{
+						assert(game_board.current_stock_card);
+						game_board.previous_hand_card = game_board.current_stock_card;
+						game_board.current_stock_card = game_board.current_stock_card->next;
 
-                    if(!game_board.current_stock_card){
-					game_board.stock_cycle_completed = true;
-					
+						if(!game_board.current_stock_card){
+						game_board.stock_cycle_completed = true;
+						
+						}
 					}
-                }
+					
+				}
                 
             } 
             
@@ -153,20 +155,60 @@ void Game::UpdateGame(float dt){
                 // Recalculate the clickable areas.
                 calculate_tableau_cards_positions_and_clickable_areas(&game_board);
             }else if(game_board.is_hand_card_held){
-                LinkedListNode<Card> *card;
-                if(game_board.previous_hand_card){
-                    card = add_node_after(&game_board.hand, game_board.held_cards.first->data, game_board.previous_hand_card);
-                    
-                }else{
-                    card = add_node_to_beginning(&game_board.hand, game_board.held_cards.first->data);
-                }
+				bool return_to_hand = true;
+				for(int i = 0; i < TABLEAU_SIZE; i++){
+					bool break_flag = false;
+					LinkedList<Card> *card_list = &game_board.tableau[i];
+					
+					LinkedListNode<Card> *previous_node = NULL;
+					LinkedListNode<Card> *current_node = card_list->first;
+					
+					int card_counter = 0;
+					
+					while(current_node){
+						Card *card = &current_node->data;
+						
+						if(DoRectContainsPoint(card->clickable_area, mouse_pos) && !card->flipped){
+							Card held_card = game_board.held_cards.first->data;
+
+							add_node(card_list, held_card);
+							// print_linked_list(card_list);
+							return_to_hand = false;
+							break_flag = true;
+							break;
+						}
+						
+						previous_node = current_node;
+						current_node = current_node->next;
+					}
+					
+					if(break_flag){
+						calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+						break;
+					}
+
+				}
 				
-				game_board.current_stock_card = card;
 				
-			
-                clear_list(&game_board.held_cards);
-                game_board.is_hand_card_held = false;
-				game_board.stock_cycle_completed = false;
+				if(return_to_hand){
+					LinkedListNode<Card> *card;
+					if(game_board.previous_hand_card){
+						card = add_node_after(&game_board.hand, game_board.held_cards.first->data, game_board.previous_hand_card);
+						
+					}else{
+						card = add_node_to_beginning(&game_board.hand, game_board.held_cards.first->data);
+					}
+					
+					game_board.current_stock_card = card;
+					
+				
+					
+					game_board.stock_cycle_completed = false;
+					
+				}
+				
+				clear_list(&game_board.held_cards);
+				game_board.is_hand_card_held = false;
             }
             
             break;
