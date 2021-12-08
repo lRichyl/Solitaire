@@ -98,38 +98,32 @@ void Game::UpdateGame(float dt){
                 }
             }
             
-            // static LinkedListNode<Card> *previous_hand_card = NULL;
             /////////////////////Check if the stock is clicked on////////////////////
-            if(game_board.stock_card_index >= game_board.hand.size){
-                game_board.stock_card_index = 0;
-                game_board.current_stock_card = game_board.hand.first;
-            }
             if(DoRectContainsPoint(game_board.stock.bounding_box, mouse_pos)){
                 
                 
-                if(game_board.hand.size >= 1){
-                    assert(game_board.current_stock_card);
+                if(game_board.stock_cycle_completed){
+					game_board.previous_hand_card = NULL;
+                    game_board.current_stock_card = game_board.hand.first;
+					game_board.stock_cycle_completed = false;
+                }else{
+					assert(game_board.current_stock_card);
                     game_board.previous_hand_card = game_board.current_stock_card;
                     game_board.current_stock_card = game_board.current_stock_card->next;
-                    
-                    
-                    
-                }else{
-                    game_board.previous_hand_card = NULL;
-                    // game_board.current_stock_card = game_board.hand.first;
-                    
+
+                    if(!game_board.current_stock_card){
+					game_board.stock_cycle_completed = true;
+					
+					}
                 }
-                game_board.stock_card_index++;
                 
             } 
             
             //////////Check if a hand card is clicked on/////////////////
-            if(DoRectContainsPoint(game_board.hand_card_bounding_box, mouse_pos) && game_board.hand.size > 0 && !game_board.is_hand_card_held){
+            if(DoRectContainsPoint(game_board.hand_card_bounding_box, mouse_pos) && !game_board.stock_cycle_completed > 0 && !game_board.is_hand_card_held){
                 add_node(&game_board.held_cards, game_board.current_stock_card->data);
-                // if(game_board.stock_card_index != game_board.hand.size){
-                    game_board.current_stock_card = game_board.current_stock_card->next;
+				game_board.current_stock_card = game_board.current_stock_card->next;
                     
-                // }
                 if(game_board.previous_hand_card){
                     delete_node_after(&game_board.hand, game_board.previous_hand_card);
                 }else{
@@ -137,7 +131,11 @@ void Game::UpdateGame(float dt){
                 }
                 
                 game_board.is_hand_card_held = true;
-                game_board.stock_card_index--;
+				
+				if(!game_board.current_stock_card){
+					game_board.stock_cycle_completed = true;
+				}
+				
             }
             
             
@@ -155,7 +153,6 @@ void Game::UpdateGame(float dt){
                 // Recalculate the clickable areas.
                 calculate_tableau_cards_positions_and_clickable_areas(&game_board);
             }else if(game_board.is_hand_card_held){
-                // append_list(&game_board.hand, &game_board.held_cards);
                 LinkedListNode<Card> *card;
                 if(game_board.previous_hand_card){
                     card = add_node_after(&game_board.hand, game_board.held_cards.first->data, game_board.previous_hand_card);
@@ -163,10 +160,13 @@ void Game::UpdateGame(float dt){
                 }else{
                     card = add_node_to_beginning(&game_board.hand, game_board.held_cards.first->data);
                 }
-                game_board.current_stock_card = card;
+				
+				game_board.current_stock_card = card;
+				
+			
                 clear_list(&game_board.held_cards);
                 game_board.is_hand_card_held = false;
-				game_board.stock_card_index++;
+				game_board.stock_cycle_completed = false;
             }
             
             break;
@@ -184,11 +184,10 @@ void Game::DrawGame(float dt, float fps){
     draw_stock(&game_board, renderer);
     
     // Draw the stock and hand.
-    // Rect *stock_bbox = &game_board.stock.bounding_box;
     static V2 pos = {game_board.hand_card_bounding_box.x, game_board.hand_card_bounding_box.y};
 
     
-    if(game_board.hand.size > 0 && game_board.current_stock_card){
+    if(!game_board.stock_cycle_completed){
         Card *card = &game_board.current_stock_card->data;
         int card_index = card->type * CARDS_PER_TYPE + card->value;
         render_sprite(renderer, &game_board.card_sprites[card_index], pos);
@@ -202,9 +201,7 @@ void Game::DrawGame(float dt, float fps){
         case MOUSE_HELD:{
             V2 mouse_pos = {(float)mouse.x, (float)mouse.y};
             draw_held_cards(&game_board, renderer, mouse_pos, mouse_card_pos_delta);
-            // print_linked_list(&game_board.held_cards);
             
-            // PrintMouseInfo(&mouse);
             
             break;
         }

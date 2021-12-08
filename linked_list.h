@@ -9,6 +9,7 @@ template<typename T>
 struct LinkedListNode{
 	T data;
 	LinkedListNode *next = NULL;
+	MemoryArena *origin_arena;
 	int key = 0;
 };
 
@@ -38,6 +39,7 @@ void init_linked_list(LinkedList<T> *list, int max_size){
 template<typename T>
 LinkedListNode<T>* add_node(LinkedList<T> *list, T data){
 	LinkedListNode<T> *new_node = allocate_from_arena<LinkedListNode<T>>(&list->arena);
+	new_node->origin_arena = &list->arena;
 	new_node->data = data;
 	new_node->next = NULL;
 	new_node->key = list->key_generator;
@@ -61,6 +63,7 @@ LinkedListNode<T>* add_node(LinkedList<T> *list, T data){
 template<typename T>
 LinkedListNode<T>* add_node_to_beginning(LinkedList<T> *list, T data){
 	LinkedListNode<T> *new_node = allocate_from_arena<LinkedListNode<T>>(&list->arena);
+	new_node->origin_arena = &list->arena;
 	new_node->data = data;
 	new_node->key = list->key_generator;
 	list->key_generator++;
@@ -78,6 +81,7 @@ LinkedListNode<T>* add_node_to_beginning(LinkedList<T> *list, T data){
 template<typename T>
 LinkedListNode<T>* add_node_after(LinkedList<T> *list, T data, LinkedListNode<T> *node){
 	LinkedListNode<T> *new_node = allocate_from_arena<LinkedListNode<T>>(&list->arena);
+	new_node->origin_arena = &list->arena;
 	// LinkedListNode<T> *new_node = find_free_node_in_pool(list);
 	new_node->data = data;
 	new_node->key = list->key_generator;
@@ -97,7 +101,7 @@ template<typename T>
 void pop_from_list(LinkedList<T> *list){
 	LinkedListNode<T> *delete_node = list->first;
 	list->first = list->first->next;
-	free_from_arena(&list->arena, delete_node);
+	free_from_arena(delete_node->origin_arena, delete_node);
 	list->size--;
 }
 
@@ -136,12 +140,12 @@ void delete_node_by_position(LinkedList<T> *list, int position){
 			if(position == 0){
 				LinkedListNode<T> *delete_node = list->first;
 				list->first = list->first->next;
-				free_from_arena(&list->arena, delete_node);
+				free_from_arena(delete_node->origin_arena, delete_node);
 				list->size--;
 				return;
 			}else{
 				previous_node->next = current_node->next;
-				free_from_arena(&list->arena, current_node);
+				free_from_arena(current_node->origin_arena, current_node);
 				list->size--;
 				return;
 			}
@@ -180,12 +184,12 @@ void delete_node_after(LinkedList<T> *list, LinkedListNode<T> *&previous_node){
 	if(previous_node->next == NULL && list->size == 1){
 		list->size--;
 		list->first = NULL;
-		free_from_arena(&list->arena, list->first);
+		free_from_arena(list->first->origin_arena, list->first);
 	}else{
 		if(previous_node->next){
 			LinkedListNode<T> *delete_node = previous_node->next;
 			previous_node->next = previous_node->next->next;
-			free_from_arena(&list->arena, delete_node);
+			free_from_arena(delete_node->origin_arena, delete_node);
 			list->size--;
 		}
 		list->last_node = previous_node;
@@ -196,12 +200,14 @@ void delete_node_after(LinkedList<T> *list, LinkedListNode<T> *&previous_node){
 // This copies the elements of the source_list to the target_list.
 template<typename T>
 void append_list(LinkedList<T> *target_list, LinkedList<T> *source_list){
-	LinkedListNode<T> *current_node = source_list->first;
-	while(current_node){
-		add_node(target_list, current_node->data);
+	// LinkedListNode<T> *current_node = source_list->first;
+	// while(current_node){
+		// add_node(target_list, current_node->data);
 		
-		current_node = current_node->next;
-	}
+		// current_node = current_node->next;
+	// }
+	target_list->last_node->next = source_list->first;
+	target_list->size += source_list->size;
 }
 
 // Copies elements of the source list to the target list starting at a certain node while removing them from the source.
@@ -227,7 +233,7 @@ void clear_list(LinkedList<T> *list){
 	while(current_node){
 		list->size--;
 		next_node = current_node->next;
-		free_from_arena(&list->arena, current_node);
+		free_from_arena(current_node->origin_arena, current_node);
 		
 		current_node = next_node;
 	}

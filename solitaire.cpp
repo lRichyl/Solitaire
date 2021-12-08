@@ -111,7 +111,7 @@ void init_board(Board *board, Window *window){
     board->stock.sprite = &board->flipped_card;
 
     board->hand_card_bounding_box = {bbox->x + bbox->w + board->padding, bbox->y, board->cards_size.x, board->cards_size.y};
-    board->current_stock_card = board->hand.first;
+    // board->current_stock_card = board->hand.first;
     
     init_linked_list(&board->held_cards, 30);
     

@@ -64,6 +64,7 @@ struct Board{
     LinkedListNode<Card> *previous_hand_card = NULL;
     Rect hand_card_bounding_box;
     bool is_hand_card_held = false;
+	bool stock_cycle_completed = true;
 };
 
 void print_data(Card *card);
