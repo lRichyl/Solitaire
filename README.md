@@ -14,3 +14,6 @@ Cards can know be dragged.
 
 Cards can be grabbed from the hand.
 ![Captura de pantalla (76)](https://user-images.githubusercontent.com/66743720/144724738-67e4170e-a903-4a1c-99fc-292c6b00ebe4.png)
+
+Cards can now be moved around.
+![cards moving around](https://user-images.githubusercontent.com/66743720/145326859-297e447f-ed90-47e8-ba4b-b871ddfbf42f.PNG)
