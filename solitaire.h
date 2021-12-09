@@ -72,8 +72,8 @@ void print_data(Card *card);
 void init_board(Board *board, Window *window);
 void shuffle_cards_to_the_board(Board *board);
 void calculate_tableau_cards_positions_and_clickable_areas(Board *board);
+bool can_card_be_added_to_card_list(Card *card, LinkedList<Card> *list);
 
-// Implement this two functions.
 
 void draw_tableau(Board *board, Renderer *renderer);
 void draw_foundations(Board *board, Renderer *renderer);

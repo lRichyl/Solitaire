@@ -149,12 +149,55 @@ void Game::UpdateGame(float dt){
         
         case MOUSE_RELEASED:{
             if(hovered_list){
-                append_list(hovered_list, &game_board.held_cards);
+				bool return_to_origin = true;
+				for(int i = 0; i < TABLEAU_SIZE; i++){
+					bool break_flag = false;
+					LinkedList<Card> *card_list = &game_board.tableau[i];
+					
+					LinkedListNode<Card> *previous_node = NULL;
+					LinkedListNode<Card> *current_node = card_list->first;
+					
+					int card_counter = 0;
+					
+					while(current_node){
+						Card *card = &current_node->data;
+						
+						if(DoRectContainsPoint(card->clickable_area, mouse_pos) && !card->flipped){
+							// TODO: Only add the card if the tableau card is -1 the value of the hand card and is the opposite color.
+							Card held_card = game_board.held_cards.first->data;
+							if(can_card_be_added_to_card_list(&held_card, card_list)){
+								append_list(card_list, &game_board.held_cards);
+								return_to_origin = false;
+								
+							}
+							break_flag = true;
+							break;
+
+							// print_linked_list(card_list);
+							
+						}
+						
+						previous_node = current_node;
+						current_node = current_node->next;
+					}
+					
+					if(break_flag){
+						calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+						break;
+					}
+
+				}
+				if(return_to_origin){
+					append_list(hovered_list, &game_board.held_cards);
+					
+				}
                 clear_list(&game_board.held_cards);
                 
-                // Recalculate the clickable areas.
+                // Recalculate the clickable areas when we release a grabbed card or group of cards from the tableau..
                 calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+				
             }else if(game_board.is_hand_card_held){
+				// If the the card taken from the hand is above a tableau stack we add it to it.
 				bool return_to_hand = true;
 				for(int i = 0; i < TABLEAU_SIZE; i++){
 					bool break_flag = false;
@@ -169,13 +212,18 @@ void Game::UpdateGame(float dt){
 						Card *card = &current_node->data;
 						
 						if(DoRectContainsPoint(card->clickable_area, mouse_pos) && !card->flipped){
+							// TODO: Only add the card if the tableau card is -1 the value of the hand card and is the opposite color.
 							Card held_card = game_board.held_cards.first->data;
-
-							add_node(card_list, held_card);
-							// print_linked_list(card_list);
-							return_to_hand = false;
+							if(can_card_be_added_to_card_list(&held_card, card_list)){
+								add_node(card_list, held_card);
+								return_to_hand = false;
+								
+							}
 							break_flag = true;
 							break;
+
+							// print_linked_list(card_list);
+							
 						}
 						
 						previous_node = current_node;
@@ -189,7 +237,7 @@ void Game::UpdateGame(float dt){
 
 				}
 				
-				
+				// If the card is not above a tableau stack we return it to the hand. 
 				if(return_to_hand){
 					LinkedListNode<Card> *card;
 					if(game_board.previous_hand_card){

@@ -170,6 +170,22 @@ void shuffle_cards_to_the_board(Board *board){
     
 }
 
+bool can_card_be_added_to_card_list(Card *card, LinkedList<Card> *list){
+	Card *last_tableau_card = &list->last_node->data;
+	int target_value = card->value + 1;
+	if(card->type == CardType::HEARTS || card->type == CardType::DIAMONDS){
+		if((last_tableau_card->type == CardType::CLUBS || last_tableau_card->type == CardType::SPADES )&& last_tableau_card->value == target_value){
+			return true;
+		}
+	}else if(card->type == CardType::CLUBS || card->type == CardType::SPADES){
+		if((last_tableau_card->type == CardType::HEARTS || last_tableau_card->type == CardType::DIAMONDS )&& last_tableau_card->value == target_value){
+			return true;
+		}
+	}
+	return false;
+}
+
+
 void draw_tableau(Board *board, Renderer *renderer){
     
     for(int i = 0; i < TABLEAU_SIZE; i++){
