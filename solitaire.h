@@ -73,6 +73,7 @@ void init_board(Board *board, Window *window);
 void shuffle_cards_to_the_board(Board *board);
 void calculate_tableau_cards_positions_and_clickable_areas(Board *board);
 bool can_card_be_added_to_card_list(Card *card, LinkedList<Card> *list);
+bool maybe_add_card_to_tableau(Board *board, V2 mouse_pos, LinkedList<Card> *&result_list);
 
 
 void draw_tableau(Board *board, Renderer *renderer);
