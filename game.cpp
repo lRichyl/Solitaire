@@ -168,7 +168,24 @@ void Game::UpdateGame(float dt){
 				held_card = game_board.held_cards.first->data;
 				
 			}
-			// Clean Up: Change hovered list name to better depict its purpose.
+			
+			bool break_out_case = false;
+			for(int i = 0; i < TABLEAU_SIZE; i++){
+				LinkedList<Card> *tableau_stack = &game_board.tableau[i];
+
+				if(DoRectContainsPoint(game_board.empty_stacks_bboxes[i], mouse_pos) && tableau_stack->size == 0 && hovered_list != tableau_stack){
+					append_list(tableau_stack, &game_board.held_cards);
+					game_board.is_tableau_card_held = false;
+					game_board.is_hand_card_held = false;
+					break_out_case = true;
+					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+	                clear_list(&game_board.held_cards);
+
+					break;
+				}
+			}
+			if(break_out_case) break;
+			
             if(game_board.is_tableau_card_held){
 				
 				
@@ -217,6 +234,7 @@ void Game::UpdateGame(float dt){
 				
 				clear_list(&game_board.held_cards);
 				game_board.is_hand_card_held = false;
+				
             }
             
             break;

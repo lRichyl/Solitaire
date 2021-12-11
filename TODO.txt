@@ -1,4 +1,3 @@
 
-- Cards can be placed in empty space. (When the size is 0).
 - Cards can be added to the foundations and retrieved.
 - Possibly add double click to automatically add cards to foundtions if possible.
