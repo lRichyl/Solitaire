@@ -38,6 +38,7 @@ void Game::UpdateGame(float dt){
     
     switch(mouse.left.state){
         case MOUSE_PRESSED:{
+			bool break_out = false;
             ////////////////////Check if mouse is clicked on a tableau's card////////////////////////////////////
             hovered_card = NULL;
             hovered_list = NULL;
@@ -53,49 +54,59 @@ void Game::UpdateGame(float dt){
                 int card_counter = 0;
                 while(current_node){
                     Card *card = &current_node->data;
+                    hovered_list = card_list;
+                    if(DoRectContainsPoint(card->clickable_area, mouse_pos)){
+						if(!card->flipped){
+							hovered_card = card;
+							game_board.is_tableau_card_held  = true;
+							node_to_split_from = previous_node;
+							// clear_list(&game_board.held_cards);
+							
+							mouse_card_pos_delta = {mouse_pos.x - hovered_card->position.x, mouse_pos.y - hovered_card->position.y};
+							if(card_counter != 0){
+								// printf("%d\n",i);
+								
+								// printf("Selected card: %d, %d\n", (int)hovered_card->type, hovered_card->value);
+					
+								// printf("Before splitting\n");
+								// print_linked_list(hovered_list);
+								
+								assert(node_to_split_from);
+								// game_board.held_cards_origin = hovered_list;
+								split_list(&game_board.held_cards, hovered_list, node_to_split_from);
+								// print_linked_list(hovered_list);
+
+									
+								
+							}else{
+								
+								//If we grab the bottom card, we dont split, we copy the origin list and clear it.
+								append_list(&game_board.held_cards, hovered_list);
+								// print_linked_list(&game_board.held_cards);
+								clear_list(hovered_list);
+								// print_linked_list(hovered_list);
+
+								
+							}
+							
+							// Recalculate the clickable areas.
+							calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+							break_out = true;
+							break;
+							
+						}else if(card_counter == hovered_list->size - 1){
+							card->flipped = false;
+							break_out = true;
+							break;
+						}
+
                     
-                    if(DoRectContainsPoint(card->clickable_area, mouse_pos) && !card->flipped){
-                        hovered_card = card;
-                        hovered_list = card_list;
-                        node_to_split_from = previous_node;
-                        // clear_list(&game_board.held_cards);
-                        
-                        mouse_card_pos_delta = {mouse_pos.x - hovered_card->position.x, mouse_pos.y - hovered_card->position.y};
-                        if(card_counter != 0){
-                            // printf("%d\n",i);
-                            
-                            // printf("Selected card: %d, %d\n", (int)hovered_card->type, hovered_card->value);
-                
-                            // printf("Before splitting\n");
-                            // print_linked_list(hovered_list);
-                            
-                            assert(node_to_split_from);
-                            // game_board.held_cards_origin = hovered_list;
-                            split_list(&game_board.held_cards, hovered_list, node_to_split_from);
-                            // print_linked_list(hovered_list);
-
-                                
-                            
-                        }else{
-                            
-                            //If we grab the bottom card, we dont split, we copy the origin list and clear it.
-                            append_list(&game_board.held_cards, hovered_list);
-                            // print_linked_list(&game_board.held_cards);
-                            clear_list(hovered_list);
-                            // print_linked_list(hovered_list);
-
-                            
-                        }
-                        
-                        // Recalculate the clickable areas.
-                        calculate_tableau_cards_positions_and_clickable_areas(&game_board);
-                        break;
-
-                    }
+					}
                     card_counter++;
                     previous_node = current_node;
                     current_node = current_node->next;
                 }
+				if(break_out) break;
             }
             
             /////////////////////Check if the stock is clicked on////////////////////
@@ -149,15 +160,17 @@ void Game::UpdateGame(float dt){
 
         
         case MOUSE_RELEASED:{
+			// print_linked_list(&game_board.tableau[0]);
 			LinkedList<Card> *card_list = NULL;
 			Card held_card;
+			bool return_to_origin = true;
 			if(game_board.held_cards.size > 0){
 				held_card = game_board.held_cards.first->data;
 				
 			}
 			// Clean Up: Change hovered list name to better depict its purpose.
-            if(hovered_list){
-				bool return_to_origin = true;
+            if(game_board.is_tableau_card_held){
+				
 				
 				if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
 					append_list(card_list, &game_board.held_cards);
@@ -174,20 +187,21 @@ void Game::UpdateGame(float dt){
                 
                 // Recalculate the clickable areas when we release a grabbed card or group of cards from the tableau..
                 calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+				game_board.is_tableau_card_held = false;
 				
             }else if(game_board.is_hand_card_held){
 				// If the the card taken from the hand is above a tableau stack we add it to it.
-				bool return_to_hand = true;
+				// bool return_to_hand = true;
 				
 				if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
 					add_node(card_list, held_card);
-					return_to_hand = false;
+					return_to_origin = false;
 					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
 
 				}
 				
 				// If the card is not above a tableau stack we return it to the hand. 
-				if(return_to_hand){
+				if(return_to_origin){
 					LinkedListNode<Card> *card;
 					if(game_board.previous_hand_card){
 						card = add_node_after(&game_board.hand, game_board.held_cards.first->data, game_board.previous_hand_card);
@@ -242,7 +256,12 @@ void Game::DrawGame(float dt, float fps){
             break;
         }
     }
-    
+	
+	// Uncomment this to see the bounding boxes that are used when the tableau stacks are empty to place cards in the empty space.
+	// for(int i = 0; i < TABLEAU_SIZE; i++){
+		// render_quad(renderer, &game_board.empty_stacks_bboxes[i], NULL);
+		
+	// }
     
     
     ////////////////////

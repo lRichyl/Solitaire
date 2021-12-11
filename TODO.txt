@@ -1,2 +1,4 @@
 
-- Fix the size of the numbers in the cards and show the type on the right corner.
+- Cards can be placed in empty space. (When the size is 0).
+- Cards can be added to the foundations and retrieved.
+- Possibly add double click to automatically add cards to foundtions if possible.

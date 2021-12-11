@@ -46,6 +46,8 @@ struct Board{
 	
 	Stock stock;
 	
+	Rect empty_stacks_bboxes[TABLEAU_SIZE];
+	
 	// std::vector<Rect> clickable_positions
 	
 	V2 cards_size = {126, 180};
@@ -64,6 +66,7 @@ struct Board{
     LinkedListNode<Card> *previous_hand_card = NULL;
     Rect hand_card_bounding_box;
     bool is_hand_card_held = false;
+	bool is_tableau_card_held = false;
 	bool stock_cycle_completed = true;
 };
 

@@ -104,6 +104,11 @@ void init_board(Board *board, Window *window){
     // This should be called every time a group of cards is moved to another stack to regenerate their positions and clickable areas.
     calculate_tableau_cards_positions_and_clickable_areas(board);
     
+	for(int i = 0; i < TABLEAU_SIZE; i++){
+		float tableau_x = board->tableau_x_positions[i];
+		float y = board->tableau_y_starting_pos - board->base_y_padding;
+		board->empty_stacks_bboxes[i] = {tableau_x, y, board->cards_size.x, board->cards_size.y};
+	}
         
     // The stock is initialized. This is just the the part you click on to get the next card.
     board->stock.bounding_box = {board->starting_x_padding, window->internalHeight - board->foundations_y_padding, board->cards_size.x, board->cards_size.y};
