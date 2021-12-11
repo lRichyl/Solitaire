@@ -60,6 +60,7 @@ struct Board{
 	
 	float foundations_y_padding = 20;
 	float foundations_x_positions[CardType::COUNT];
+	float foundations_y_position;
 	
 	int stock_card_index = 0;
 	LinkedListNode<Card> *current_stock_card = NULL;
@@ -78,7 +79,7 @@ void calculate_tableau_cards_positions_and_clickable_areas(Board *board);
 bool can_card_be_added_to_card_list(Card *card, LinkedList<Card> *list);
 bool maybe_add_card_to_tableau(Board *board, V2 mouse_pos, LinkedList<Card> *&result_list);
 
-
+void draw_card(Card *card, V2 position, Board *board, Renderer *renderer);
 void draw_tableau(Board *board, Renderer *renderer);
 void draw_foundations(Board *board, Renderer *renderer);
 void draw_stock(Board *board, Renderer *renderer);

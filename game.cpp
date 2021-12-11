@@ -136,6 +136,8 @@ void Game::UpdateGame(float dt){
             if(DoRectContainsPoint(game_board.hand_card_bounding_box, mouse_pos) && !game_board.stock_cycle_completed > 0 && !game_board.is_hand_card_held){
                 add_node(&game_board.held_cards, game_board.current_stock_card->data);
 				game_board.current_stock_card = game_board.current_stock_card->next;
+				
+				mouse_card_pos_delta = {mouse_pos.x - game_board.hand_card_bounding_box.x, mouse_pos.y - game_board.hand_card_bounding_box.y};
                     
                 if(game_board.previous_hand_card){
                     delete_node_after(&game_board.hand, game_board.previous_hand_card);
@@ -162,29 +164,66 @@ void Game::UpdateGame(float dt){
         case MOUSE_RELEASED:{
 			// print_linked_list(&game_board.tableau[0]);
 			LinkedList<Card> *card_list = NULL;
-			Card held_card;
+			Card *held_card;
 			bool return_to_origin = true;
 			if(game_board.held_cards.size > 0){
-				held_card = game_board.held_cards.first->data;
+				held_card = &game_board.held_cards.first->data;
 				
 			}
 			
-			bool break_out_case = false;
-			for(int i = 0; i < TABLEAU_SIZE; i++){
-				LinkedList<Card> *tableau_stack = &game_board.tableau[i];
+			if(held_card){
+				bool break_out_case = false;
+				// When a card or stack of cards gets placed on an empty place break out.
+				for(int i = 0; i < TABLEAU_SIZE; i++){
+					LinkedList<Card> *tableau_stack = &game_board.tableau[i];
 
-				if(DoRectContainsPoint(game_board.empty_stacks_bboxes[i], mouse_pos) && tableau_stack->size == 0 && hovered_list != tableau_stack){
-					append_list(tableau_stack, &game_board.held_cards);
+					if(DoRectContainsPoint(game_board.empty_stacks_bboxes[i], mouse_pos) && tableau_stack->size == 0 && hovered_list != tableau_stack){
+						append_list(tableau_stack, &game_board.held_cards);
+						
+						break_out_case = true;
+						
+
+						break;
+					}
+				}
+				
+				// If mouse is released on top of a foundation we check if it can be added.
+				for(int i = 0; i < CardType::COUNT; i++){
+					LinkedList<Card> *foundation = &game_board.foundations[i];
+					Rect foundation_bbox = {game_board.foundations_x_positions[i], game_board.foundations_y_position, game_board.cards_size.x, game_board.cards_size.y};
+
+					if(DoRectContainsPoint(foundation_bbox, mouse_pos) && game_board.held_cards.size == 1){
+						Card *current_foundation_card = &foundation->last_node->data;
+						Card *held_card = &game_board.held_cards.first->data;
+						
+						if(foundation->size > 0){
+							if((int)held_card->type == i && held_card->value - 1 == current_foundation_card->value){
+								add_node(foundation, *held_card);
+								break_out_case = true;
+								break;
+							}
+							
+						}else{
+							if((int)held_card->type == i && held_card->value == 0){
+								add_node(foundation, *held_card);
+								break_out_case = true;
+							}
+						}
+						
+					}
+				}
+				
+				if(break_out_case){
 					game_board.is_tableau_card_held = false;
 					game_board.is_hand_card_held = false;
-					break_out_case = true;
+					
 					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
-	                clear_list(&game_board.held_cards);
-
+					clear_list(&game_board.held_cards);
 					break;
 				}
 			}
-			if(break_out_case) break;
+			
+			
 			
             if(game_board.is_tableau_card_held){
 				
@@ -211,7 +250,7 @@ void Game::UpdateGame(float dt){
 				// bool return_to_hand = true;
 				
 				if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
-					add_node(card_list, held_card);
+					add_node(card_list, *held_card);
 					return_to_origin = false;
 					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
 
@@ -266,6 +305,7 @@ void Game::DrawGame(float dt, float fps){
     
     //Render the held cards.
     switch(mouse.left.state){
+		case MOUSE_PRESSED:
         case MOUSE_HELD:{
             V2 mouse_pos = {(float)mouse.x, (float)mouse.y};
             draw_held_cards(&game_board, renderer, mouse_pos, mouse_card_pos_delta);
@@ -278,6 +318,12 @@ void Game::DrawGame(float dt, float fps){
 	// Uncomment this to see the bounding boxes that are used when the tableau stacks are empty to place cards in the empty space.
 	// for(int i = 0; i < TABLEAU_SIZE; i++){
 		// render_quad(renderer, &game_board.empty_stacks_bboxes[i], NULL);
+		
+	// }
+	
+	// for(int i = 0; i < CardType::COUNT; i++){
+		// Rect foundation_bbox = {game_board.foundations_x_positions[i], renderer->window->internalHeight - game_board.foundations_y_padding, game_board.cards_size.x, game_board.cards_size.y};
+		// render_quad(renderer, &foundation_bbox, NULL);
 		
 	// }
     

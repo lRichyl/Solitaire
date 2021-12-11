@@ -100,6 +100,7 @@ void init_board(Board *board, Window *window){
         // board->tableau_x_positions[i] = (board->padding/2.f) + (i * board->padding) + (board->cards_size.x * i);
         board->foundations_x_positions[i] = board->tableau_x_positions[j + i];
     }
+	board->foundations_y_position = window->internalHeight - board->foundations_y_padding;
     
     // This should be called every time a group of cards is moved to another stack to regenerate their positions and clickable areas.
     calculate_tableau_cards_positions_and_clickable_areas(board);
@@ -111,7 +112,7 @@ void init_board(Board *board, Window *window){
 	}
         
     // The stock is initialized. This is just the the part you click on to get the next card.
-    board->stock.bounding_box = {board->starting_x_padding, window->internalHeight - board->foundations_y_padding, board->cards_size.x, board->cards_size.y};
+    board->stock.bounding_box = {board->starting_x_padding, board->foundations_y_position, board->cards_size.x, board->cards_size.y};
     Rect *bbox = &board->stock.bounding_box;
     board->stock.sprite = &board->flipped_card;
 
@@ -227,6 +228,11 @@ bool maybe_add_card_to_tableau(Board *board, V2 mouse_pos, LinkedList<Card> *&re
 	return false;
 }
 
+void draw_card(Card *card, V2 position, Board *board, Renderer *renderer){
+	int card_index = card->type * CARDS_PER_TYPE + card->value;
+        
+	render_sprite(renderer, &board->card_sprites[card_index], position);
+}
 
 void draw_tableau(Board *board, Renderer *renderer){
     
@@ -271,9 +277,10 @@ void draw_held_cards(Board *board, Renderer *renderer, V2 mouse_pos, V2 mouse_ca
     // printf("%f, %f\n", mouse_pos.x, mouse_pos.y);
     while(current_node){
         Card *card = &current_node->data;
-        int card_index = card->type * CARDS_PER_TYPE + card->value;
+        // int card_index = card->type * CARDS_PER_TYPE + card->value;
         
-        render_sprite(renderer, &board->card_sprites[card_index], drawing_position);
+        // render_sprite(renderer, &board->card_sprites[card_index], drawing_position);
+		draw_card(card, drawing_position, board, renderer);
         drawing_position.y -= board->base_y_padding;
         
         previous_node = current_node;
@@ -283,7 +290,19 @@ void draw_held_cards(Board *board, Renderer *renderer, V2 mouse_pos, V2 mouse_ca
 
 void draw_foundations(Board *board, Renderer *renderer){
     for(int i = 0; i < CardType::COUNT; i++){
-        render_sprite(renderer, &board->foundation_sprite, {board->foundations_x_positions[i], renderer->window->internalHeight - board->foundations_y_padding});
+		LinkedList<Card> *foundation = &board->foundations[i];
+		
+		if(foundation->size > 0){
+			Card *card = &foundation->last_node->data;
+			// int card_index = card->type * CARDS_PER_TYPE + card->value;
+			V2 position = {board->foundations_x_positions[i], board->foundations_y_position};
+			// render_sprite(renderer, &board->card_sprites[card_index], drawing_position);
+			draw_card(card, position, board, renderer);
+			
+		}else{
+			render_sprite(renderer, &board->foundation_sprite, {board->foundations_x_positions[i], board->foundations_y_position});
+			
+		}
         
     }
 }
