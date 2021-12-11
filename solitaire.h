@@ -61,6 +61,8 @@ struct Board{
 	float foundations_y_padding = 20;
 	float foundations_x_positions[CardType::COUNT];
 	float foundations_y_position;
+	LinkedListNode<Card> *previous_foundations_nodes[CardType::COUNT];
+	LinkedList<Card> *origin_foundation;
 	
 	int stock_card_index = 0;
 	LinkedListNode<Card> *current_stock_card = NULL;
@@ -68,6 +70,7 @@ struct Board{
     Rect hand_card_bounding_box;
     bool is_hand_card_held = false;
 	bool is_tableau_card_held = false;
+	bool is_foundation_card_held = false;
 	bool stock_cycle_completed = true;
 };
 

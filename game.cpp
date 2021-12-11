@@ -152,8 +152,30 @@ void Game::UpdateGame(float dt){
 				}
 				
             }
-            
-            
+			
+			////////////Check if a foundation is clicked on////////////////
+			for(int i = 0; i < CardType::COUNT; i++){
+				LinkedList<Card> *foundation = &game_board.foundations[i];
+				Rect foundation_bbox = {game_board.foundations_x_positions[i], game_board.foundations_y_position, game_board.cards_size.x, game_board.cards_size.y};
+	
+				if(DoRectContainsPoint(foundation_bbox, mouse_pos)){
+					Card *top_card = &foundation->last_node->data;
+					mouse_card_pos_delta = {mouse_pos.x - foundation_bbox.x, mouse_pos.y - foundation_bbox.y};
+					
+					if(foundation->size > 1){
+						add_node(&game_board.held_cards, *top_card);
+						delete_node_after(foundation, game_board.previous_foundations_nodes[i]);
+					}else{
+						add_node(&game_board.held_cards, *top_card);
+						pop_from_list(foundation);
+					}
+					game_board.is_foundation_card_held = true;
+					game_board.origin_foundation = foundation;
+					
+				}
+				
+			}
+
             
             break;
         }
@@ -198,15 +220,19 @@ void Game::UpdateGame(float dt){
 						
 						if(foundation->size > 0){
 							if((int)held_card->type == i && held_card->value - 1 == current_foundation_card->value){
+								game_board.previous_foundations_nodes[i] = foundation->last_node;
 								add_node(foundation, *held_card);
+								
 								break_out_case = true;
 								break;
 							}
 							
 						}else{
 							if((int)held_card->type == i && held_card->value == 0){
+								game_board.previous_foundations_nodes[i] = foundation->last_node;
 								add_node(foundation, *held_card);
 								break_out_case = true;
+								break;
 							}
 						}
 						
@@ -274,7 +300,22 @@ void Game::UpdateGame(float dt){
 				clear_list(&game_board.held_cards);
 				game_board.is_hand_card_held = false;
 				
-            }
+            }else if(game_board.is_foundation_card_held){
+				//If a foundation card is being held and is not dropped on the tableau we return it to its origin.
+				if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
+					add_node(card_list, *held_card);
+					return_to_origin = false;
+					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+				}
+				
+				if(return_to_origin){
+					Card *card = &game_board.held_cards.first->data;
+					add_node(game_board.origin_foundation, *card);
+				}
+				
+				clear_list(&game_board.held_cards);
+				game_board.is_foundation_card_held = false;
+			}
             
             break;
         }

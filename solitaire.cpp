@@ -254,12 +254,12 @@ void draw_tableau(Board *board, Renderer *renderer){
             }
             
             // Uncomment this to see the clickable areas of the cards.
-            if(current_node == card_stack->last_node){
-                render_colored_rect(renderer, &card->clickable_area,{255,0,0}, 0.4);
+            // if(current_node == card_stack->last_node){
+                // render_colored_rect(renderer, &card->clickable_area,{255,0,0}, 0.4);
                 // printf("%f %f\n", card->clickable_area.x, card->clickable_area.y);
-            }else{
-                render_colored_rect(renderer, &card->clickable_area,{0,0,255}, 0.4);
-            }
+            // }else{
+                // render_colored_rect(renderer, &card->clickable_area,{0,0,255}, 0.4);
+            // }
 
             
             previous_node = current_node;
