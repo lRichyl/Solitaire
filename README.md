@@ -1,19 +1,8 @@
 # Solitaire
  
- Drawing the tableau.
-![1 - Drawing tableau](https://user-images.githubusercontent.com/66743720/141697485-f370bab2-09c6-4245-9f11-568ff56992cb.PNG)
+This is a copy of the game Solitaire made with a custom 2D OpenGL renderer, which is used to test both the renderer and my implementation of a linked list. It currently is fully working, it's playable. A few more features will be added like undoing moves and double clicking to add cards to the foundations. 
 
-Drawing the foundations.
-![2 - Drawing the foundations](https://user-images.githubusercontent.com/66743720/141697492-94720202-ecdc-4de9-910f-8c5b37952b35.PNG)
+I considered myself a beginner so this code may not the best but if you're a beginner too you can freely use it for educational purposes. 
 
-Defining the clickable areas.
-![3 - Defining the clickable areas](https://user-images.githubusercontent.com/66743720/141697493-84ea21f4-f5e8-44f5-a1b3-80a1f3b39961.PNG)
-
-Cards can know be dragged.
-![Captura de pantalla (74)](https://user-images.githubusercontent.com/66743720/144151995-85688aa7-bd6f-4d76-b9d1-47c810090a6b.png)
-
-Cards can be grabbed from the hand.
-![Captura de pantalla (76)](https://user-images.githubusercontent.com/66743720/144724738-67e4170e-a903-4a1c-99fc-292c6b00ebe4.png)
-
-Cards can now be moved around.
-![cards moving around](https://user-images.githubusercontent.com/66743720/145326859-297e447f-ed90-47e8-ba4b-b871ddfbf42f.PNG)
+To compile this code you need to have MinGW installed and run the build.bat file.
+![Captura de pantalla (78)](https://user-images.githubusercontent.com/66743720/145693858-32dea904-4b0b-46e9-a476-f3c552c0ddff.png)
