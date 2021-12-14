@@ -103,6 +103,11 @@ void pop_from_list(LinkedList<T> *list){
 	list->first = list->first->next;
 	free_from_arena(delete_node->origin_arena, delete_node);
 	list->size--;
+	
+	if(list->size == 0){
+		list->first = NULL;
+		list->last_node = NULL;
+	}
 }
 
 // For every type that we want to store in a linked list we need to define an overload of this function

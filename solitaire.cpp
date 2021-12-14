@@ -370,17 +370,24 @@ static void copy_hand_card_array_to_list(T *cards, LinkedList<Card> *list, Board
 		}
 		
 	}else{
-		for(int i = 0; i < cards->size(); i++){
-			Card *card = &(*cards)[i];
-			if(card->type == CardType::COUNT) return;
-			if(i == 0){
-				add_node(list, state->card_to_place_as_current);
-				add_node(list, *card);
-			}else{
-				add_node(list, *card);
+		// if(board->hand.size > 0){
+			for(int i = 0; i < cards->size(); i++){
+				Card *card = &(*cards)[i];
+				if(card->type == CardType::COUNT) return;
+				if(i == 0){
+					add_node(list, state->card_to_place_as_current);
+					add_node(list, *card);
+				}else{
+					add_node(list, *card);
+				}
 			}
-		}
+			
+		// }else{
+			// add_node(list, state->card_to_place_as_current);
+		// }
 	}
+		
+	
 }
 
 void undo_action(Board *board){
@@ -401,8 +408,16 @@ void undo_action(Board *board){
 	
 	
 	if(state->from_hand){
-		clear_list(&board->hand);
-		copy_hand_card_array_to_list(&state->hand,&board->hand, board, state);
+		if(board->hand.size > 0){
+			clear_list(&board->hand);
+			copy_hand_card_array_to_list(&state->hand,&board->hand, board, state);
+		}else{
+			add_node(&board->hand, state->card_to_place_as_current);
+			// board->previous_hand_card = NULL;
+			// board->current_stock_card = board->hand.first;
+			board->stock_cycle_completed = false;
+			// state->first_card = true;
+		}
 		LinkedListNode<Card> *previous_node = NULL;
 		LinkedListNode<Card> *current_node = board->hand.first;
 		if(!state->first_card){
