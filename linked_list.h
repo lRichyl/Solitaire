@@ -233,10 +233,24 @@ void clear_list(LinkedList<T> *list){
 	while(current_node){
 		list->size--;
 		next_node = current_node->next;
+		current_node->next = NULL;
 		free_from_arena(current_node->origin_arena, current_node);
 		
 		current_node = next_node;
 	}
 	list->first = NULL;
 	list->last_node = NULL;	
+}
+
+template<typename T>
+void copy_list(LinkedList<T> *copy_list, LinkedList<T> *target_list){
+	
+	LinkedListNode<T> *current_node = copy_list->first;
+	LinkedListNode<T> *previous_node = NULL;
+	while(current_node){
+		add_node(target_list, current_node->data);
+		
+		previous_node = current_node;
+		current_node = current_node->next;
+	}
 }

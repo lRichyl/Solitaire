@@ -120,6 +120,7 @@ void init_board(Board *board, Window *window){
     // board->current_stock_card = board->hand.first;
     
     init_linked_list(&board->held_cards, 30);
+	init_linked_list(&board->done_actions, 500);
     
 }
 
@@ -151,6 +152,7 @@ void shuffle_cards_to_the_board(Board *board){
                 card->flipped = true;
             }
             first = false;
+			card->origin = &board->tableau[j + i];
             add_node(&board->tableau[j + i], *card);
             delete_node_by_position(&cards, random_card);
         }
@@ -168,6 +170,7 @@ void shuffle_cards_to_the_board(Board *board){
         // int foundation_index = random_card / CARDS_PER_TYPE;
             
         Card *card = find_node_by_position(&cards, random_card);
+		card->origin = &board->hand;
         assert(card);
         add_node(&board->hand, *card);
         delete_node_by_position(&cards, random_card);
@@ -179,6 +182,7 @@ void shuffle_cards_to_the_board(Board *board){
 bool can_card_be_added_to_card_list(Card *card, LinkedList<Card> *list){
 	Card *last_tableau_card = &list->last_node->data;
 	int target_value = card->value + 1;
+	if(list == card->origin) return false;
 	if(card->type == CardType::HEARTS || card->type == CardType::DIAMONDS){
 		if((last_tableau_card->type == CardType::CLUBS || last_tableau_card->type == CardType::SPADES )&& last_tableau_card->value == target_value){
 			return true;
@@ -226,6 +230,19 @@ bool maybe_add_card_to_tableau(Board *board, V2 mouse_pos, LinkedList<Card> *&re
 
 	}
 	return false;
+}
+
+void update_cards_origin(LinkedList<Card> *cards, LinkedList<Card> *new_origin){
+		LinkedListNode<Card> *previous_node = NULL;
+		LinkedListNode<Card> *current_node = cards->first;
+		
+		
+		while(current_node){
+			current_node->data.origin = new_origin;
+			
+			previous_node = current_node;
+			current_node = current_node->next;
+		}
 }
 
 void draw_card(Card *card, V2 position, Board *board, Renderer *renderer){
@@ -314,3 +331,190 @@ void draw_stock(Board *board, Renderer *renderer){
     render_sprite(renderer, board->stock.sprite, {board->stock.bounding_box.x, board->stock.bounding_box.y});
 }
 
+template<typename T>
+static void copy_card_array_to_list(T *cards, LinkedList<Card> *list){
+	// if(!state->from_hand){
+		for(int i = 0; i < cards->size(); i++){
+			if((*cards)[i].type == CardType::COUNT) return;
+			add_node(list, (*cards)[i]);
+		}
+		
+	// }else{
+		// for(int i = 0; i < cards->size(); i++){
+			// Card *card = &(*cards)[i];
+			// Card *previous_card = &board->previous_card_to_held;
+			// if(card->type == CardType::COUNT) return;
+			// if(card->type == previous_card->type && card->value == previous_card->value){
+				// add_node(list, *card);
+				// add_node(list, state->card_to_place_as_current);
+			// }
+			// add_node(list, (*cards)[i]);
+		// }
+	// }
+}
+
+template<typename T>
+static void copy_hand_card_array_to_list(T *cards, LinkedList<Card> *list, Board *board, BoardState *state){
+	if(!state->first_card){
+		for(int i = 0; i < cards->size(); i++){
+			Card *card = &(*cards)[i];
+			Card *previous_card = &state->previous_card_to_placed;
+			if(card->type == CardType::COUNT) return;
+			if(card->type == previous_card->type && card->value == previous_card->value){
+				add_node(list, *card);
+				add_node(list, state->card_to_place_as_current);
+			}else{
+				add_node(list, *card);
+				
+			}
+		}
+		
+	}else{
+		for(int i = 0; i < cards->size(); i++){
+			Card *card = &(*cards)[i];
+			if(card->type == CardType::COUNT) return;
+			if(i == 0){
+				add_node(list, state->card_to_place_as_current);
+				add_node(list, *card);
+			}else{
+				add_node(list, *card);
+			}
+		}
+	}
+}
+
+void undo_action(Board *board){
+	if(board->done_actions.size == 0) return;
+	BoardState *state = &board->done_actions.first->data;
+	for(int i = 0; i < TABLEAU_SIZE; i++){
+		LinkedList<Card> *list = &board->tableau[i];
+		clear_list(list);
+		copy_card_array_to_list(&state->tableau[i],list);
+	}
+	
+	for(int i = 0; i < CardType::COUNT; i++){
+		LinkedList<Card> *list = &board->foundations[i];
+		clear_list(list);
+		copy_card_array_to_list(&state->foundations[i],list);
+	}
+	
+	
+	
+	if(state->from_hand){
+		clear_list(&board->hand);
+		copy_hand_card_array_to_list(&state->hand,&board->hand, board, state);
+		LinkedListNode<Card> *previous_node = NULL;
+		LinkedListNode<Card> *current_node = board->hand.first;
+		if(!state->first_card){
+			while(current_node){
+				Card *hand_card     = &current_node->data;
+				Card *card_to_place = &state->card_to_place_as_current;
+				if(hand_card->type == card_to_place->type && hand_card->value == card_to_place->value){
+					board->current_stock_card = current_node;
+					board->previous_hand_card = previous_node;
+					break;
+				}
+				
+				previous_node = current_node;
+				current_node = current_node->next;
+			}
+			
+		}else{
+			board->current_stock_card = current_node;
+			board->previous_hand_card = previous_node;
+		}
+		
+	}
+	
+	pop_from_list(&board->done_actions);
+}
+
+template<typename T>
+void copy_cards_list_to_array(LinkedList<Card> *list, T *cards, LinkedList<Card> *held_cards, Board *board, bool from_hand  = false){
+	LinkedListNode<Card> *previous_node = NULL;
+    LinkedListNode<Card> *current_node = list->first;
+    // printf("%f, %f\n", mouse_pos.x, mouse_pos.y);
+	int index = 0;
+    while(current_node){
+        // cards->push_back(current_node->data);
+		(*cards)[index] = current_node->data;
+        
+        previous_node = current_node;
+        current_node = current_node->next;
+		index++;
+    }
+	
+	// This is done because the cards that are being held have to be saved into the last state. Because when we grab the cards 
+	// they get deleted from the origin list, so we need to add them to the last board state.
+	if(from_hand) return;	
+	if(held_cards->size == 0) return;
+	if(held_cards->first->data.origin == list && list != &board->hand){
+		previous_node = NULL;
+		current_node = held_cards->first;
+		while(current_node){
+			(*cards)[index] = current_node->data;
+			
+			
+			previous_node = current_node;
+			current_node = current_node->next;
+			index++;
+		}
+		
+	}
+	
+}
+
+
+static void copy_hand_cards_list_to_array(LinkedList<Card> *list, BoardState *state, Board *board){
+	LinkedListNode<Card> *previous_node = NULL;
+	LinkedListNode<Card> *current_node = board->hand.first;
+	Card *previous_card_to_held = &board->previous_card_to_held;
+	int index = 0;
+	while(current_node){
+		if(previous_node){
+			if(previous_card_to_held){
+				if(previous_card_to_held->type == previous_node->data.type && previous_card_to_held->value == previous_node->data.value){
+					state->hand[index] = board->held_cards.first->data;
+                    // board->previous_hand_card = previous_node;
+				}else{
+					state->hand[index] = current_node->data;
+				}
+
+			}
+				
+		}else{
+			state->hand[index] = current_node->data;
+		}
+		
+		previous_node = current_node;
+		current_node = current_node->next;
+		index++;
+	}
+	
+}
+
+
+void set_undo_info(Board *board, bool from_hand){
+	BoardState state;
+	state.from_hand = from_hand;
+	if(state.from_hand){
+		state.card_to_place_as_current = board->held_cards.first->data;
+		if(board->previous_hand_card)
+			state.previous_card_to_placed = board->previous_hand_card->data;
+		else state.first_card = true;
+	}
+	for(int i = 0; i < TABLEAU_SIZE; i++){
+		copy_cards_list_to_array(&board->tableau[i], &state.tableau[i], &board->held_cards, board);
+	}
+	
+	for(int i = 0; i < CardType::COUNT; i++){
+		copy_cards_list_to_array(&board->foundations[i], &state.foundations[i], &board->held_cards, board);
+	}
+	
+	// if(state.from_hand){
+		copy_cards_list_to_array(&board->hand, &state.hand, &board->held_cards, board, state.from_hand);
+		
+	// }
+	
+	add_node_to_beginning(&board->done_actions, state);
+}

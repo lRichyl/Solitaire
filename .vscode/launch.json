@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(gdb) Adjuntar",
+            "type": "cppdbg",
+            "request": "attach",
+            "program": "${workspaceFolder}/game.exe.",
+            "processId": "${command:pickProcess}",
+            "MIMode": "gdb"
+        },
+        {
             "name": "(gdb) Iniciar",
             "type": "cppdbg",
             "request": "launch",

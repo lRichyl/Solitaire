@@ -1,5 +1,5 @@
 #pragma once
-#include <vector>
+#include <array>
 
 #include "linked_list.h"
 #include "engine/sprite.h"
@@ -20,7 +20,8 @@ enum CardType{
 };
 
 struct Card{
-	CardType type;
+	CardType type = CardType::COUNT;
+	LinkedList<Card> *origin;
 	bool flipped = false;
 	int value;
 	V2 position = {};
@@ -30,6 +31,25 @@ struct Card{
 struct Stock{
 	Rect bounding_box;
 	Sprite *sprite;
+};
+
+
+enum Action{
+	ACTION_NONE,
+	ACTION_MOVE,
+	ACTION_FLIP
+};
+
+
+struct BoardState{
+	std::array<Card, MAX_STACK_SIZE> tableau[TABLEAU_SIZE];
+	std::array<Card, CARDS_PER_TYPE> foundations[CardType::COUNT];
+	std::array<Card, MAX_HAND_SIZE>  hand;
+	
+	Card previous_card_to_placed;
+	Card card_to_place_as_current;
+	bool first_card = false;
+	bool from_hand = false;
 };
 
 
@@ -48,7 +68,8 @@ struct Board{
 	
 	Rect empty_stacks_bboxes[TABLEAU_SIZE];
 	
-	// std::vector<Rect> clickable_positions
+	// This linked list will be used as a stack. I will later implement a stack using this linked list implementation as the base data structure.
+	LinkedList<BoardState> done_actions;
 	
 	V2 cards_size = {126, 180};
 	float tableau_empty_space;
@@ -67,6 +88,7 @@ struct Board{
 	int stock_card_index = 0;
 	LinkedListNode<Card> *current_stock_card = NULL;
     LinkedListNode<Card> *previous_hand_card = NULL;
+	Card previous_card_to_held;
     Rect hand_card_bounding_box;
     bool is_hand_card_held = false;
 	bool is_tableau_card_held = false;
@@ -74,11 +96,16 @@ struct Board{
 	bool stock_cycle_completed = true;
 };
 
+
+
+
+
 void print_data(Card *card);
 
 void init_board(Board *board, Window *window);
 void shuffle_cards_to_the_board(Board *board);
 void calculate_tableau_cards_positions_and_clickable_areas(Board *board);
+void update_cards_origin(LinkedList<Card> *cards, LinkedList<Card> *new_origin);
 bool can_card_be_added_to_card_list(Card *card, LinkedList<Card> *list);
 bool maybe_add_card_to_tableau(Board *board, V2 mouse_pos, LinkedList<Card> *&result_list);
 
@@ -87,3 +114,7 @@ void draw_tableau(Board *board, Renderer *renderer);
 void draw_foundations(Board *board, Renderer *renderer);
 void draw_stock(Board *board, Renderer *renderer);
 void draw_held_cards(Board *board, Renderer *renderer, V2 mouse_pos, V2 mouse_card_delta);
+
+void undo_action(Board *board);
+void copy_cards_list_to_vector(LinkedList<Card> *list, std::vector<Card> *cards);
+void set_undo_info(Board *board, bool from_hand = false);

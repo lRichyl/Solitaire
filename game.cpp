@@ -22,6 +22,8 @@ Game::Game(Renderer *r, Window *w){
     background.texture = get_texture(&asset_manager, "Background");
     
     init_board(&game_board, w);
+	//We do this once at the beginning to store the initial state of the board.
+	// set_undo_info(&game_board);
 }
 
 MouseInfo mouse;
@@ -44,6 +46,8 @@ void Game::UpdateGame(float dt){
             hovered_list = NULL;
             node_to_split_from = NULL;
             // game_board.held_cards_origin = NULL;
+			
+			// UndoInfo undo_info;
             
             for(int i = 0; i < TABLEAU_SIZE; i++){
                 LinkedList<Card> *card_list = &game_board.tableau[i];
@@ -95,6 +99,7 @@ void Game::UpdateGame(float dt){
 							break;
 							
 						}else if(card_counter == hovered_list->size - 1){
+							set_undo_info(&game_board);
 							card->flipped = false;
 							break_out = true;
 							break;
@@ -140,6 +145,7 @@ void Game::UpdateGame(float dt){
 				mouse_card_pos_delta = {mouse_pos.x - game_board.hand_card_bounding_box.x, mouse_pos.y - game_board.hand_card_bounding_box.y};
                     
                 if(game_board.previous_hand_card){
+					game_board.previous_card_to_held = game_board.previous_hand_card->data;
                     delete_node_after(&game_board.hand, game_board.previous_hand_card);
                 }else{
                     pop_from_list(&game_board.hand);
@@ -186,8 +192,9 @@ void Game::UpdateGame(float dt){
         case MOUSE_RELEASED:{
 			// print_linked_list(&game_board.tableau[0]);
 			LinkedList<Card> *card_list = NULL;
-			Card *held_card;
+			Card *held_card = NULL;
 			bool return_to_origin = true;
+			// BoardState board_state;
 			if(game_board.held_cards.size > 0){
 				held_card = &game_board.held_cards.first->data;
 				
@@ -200,9 +207,11 @@ void Game::UpdateGame(float dt){
 					LinkedList<Card> *tableau_stack = &game_board.tableau[i];
 
 					if(DoRectContainsPoint(game_board.empty_stacks_bboxes[i], mouse_pos) && tableau_stack->size == 0 && hovered_list != tableau_stack){
+						set_undo_info(&game_board);
+						update_cards_origin(&game_board.held_cards, tableau_stack);
 						append_list(tableau_stack, &game_board.held_cards);
-						
 						break_out_case = true;
+						
 						
 
 						break;
@@ -221,6 +230,8 @@ void Game::UpdateGame(float dt){
 						if(foundation->size > 0){
 							if((int)held_card->type == i && held_card->value - 1 == current_foundation_card->value){
 								game_board.previous_foundations_nodes[i] = foundation->last_node;
+								set_undo_info(&game_board, game_board.is_hand_card_held);
+								held_card->origin = foundation;
 								add_node(foundation, *held_card);
 								
 								break_out_case = true;
@@ -230,6 +241,8 @@ void Game::UpdateGame(float dt){
 						}else{
 							if((int)held_card->type == i && held_card->value == 0){
 								game_board.previous_foundations_nodes[i] = foundation->last_node;
+								set_undo_info(&game_board, game_board.is_hand_card_held);
+								held_card->origin = foundation;
 								add_node(foundation, *held_card);
 								break_out_case = true;
 								break;
@@ -242,86 +255,111 @@ void Game::UpdateGame(float dt){
 				if(break_out_case){
 					game_board.is_tableau_card_held = false;
 					game_board.is_hand_card_held = false;
+					// set_undo_info(&game_board);
 					
 					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
 					clear_list(&game_board.held_cards);
 					break;
 				}
-			}
-			
-			
-			
-            if(game_board.is_tableau_card_held){
 				
-				
-				if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
-					append_list(card_list, &game_board.held_cards);
-					return_to_origin = false;
-					// calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+				if(game_board.is_tableau_card_held){
+					if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
+						set_undo_info(&game_board);
+						update_cards_origin(&game_board.held_cards, card_list);
+						append_list(card_list, &game_board.held_cards);
+						return_to_origin = false;
+						// calculate_tableau_cards_positions_and_clickable_areas(&game_board);
 
-				}
-				
-				if(return_to_origin){
-					append_list(hovered_list, &game_board.held_cards);
-					
-				}
-                clear_list(&game_board.held_cards);
-                
-                // Recalculate the clickable areas when we release a grabbed card or group of cards from the tableau..
-                calculate_tableau_cards_positions_and_clickable_areas(&game_board);
-				game_board.is_tableau_card_held = false;
-				
-            }else if(game_board.is_hand_card_held){
-				// If the the card taken from the hand is above a tableau stack we add it to it.
-				// bool return_to_hand = true;
-				
-				if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
-					add_node(card_list, *held_card);
-					return_to_origin = false;
-					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
-
-				}
-				
-				// If the card is not above a tableau stack we return it to the hand. 
-				if(return_to_origin){
-					LinkedListNode<Card> *card;
-					if(game_board.previous_hand_card){
-						card = add_node_after(&game_board.hand, game_board.held_cards.first->data, game_board.previous_hand_card);
-						
-					}else{
-						card = add_node_to_beginning(&game_board.hand, game_board.held_cards.first->data);
 					}
 					
-					game_board.current_stock_card = card;
-					game_board.stock_cycle_completed = false;
+					if(return_to_origin){
+						append_list(hovered_list, &game_board.held_cards);
+						
+					}
+					clear_list(&game_board.held_cards);
 					
-				}
-				
-				clear_list(&game_board.held_cards);
-				game_board.is_hand_card_held = false;
-				
-            }else if(game_board.is_foundation_card_held){
-				//If a foundation card is being held and is not dropped on the tableau we return it to its origin.
-				if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
-					add_node(card_list, *held_card);
-					return_to_origin = false;
+					// Recalculate the clickable areas when we release a grabbed card or group of cards from the tableau..
 					calculate_tableau_cards_positions_and_clickable_areas(&game_board);
-				}
+					game_board.is_tableau_card_held = false;
 				
-				if(return_to_origin){
-					Card *card = &game_board.held_cards.first->data;
-					add_node(game_board.origin_foundation, *card);
+				}else if(game_board.is_hand_card_held){
+					// If the the card taken from the hand is above a tableau stack we add it to it.
+					// bool return_to_hand = true;
+					
+					if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
+						set_undo_info(&game_board, true);
+						update_cards_origin(&game_board.held_cards, card_list);
+						add_node(card_list, *held_card);
+						return_to_origin = false;
+						calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+
+					}
+					
+					// If the card is not above a tableau stack we return it to the hand. 
+					if(return_to_origin){
+						LinkedListNode<Card> *card;
+						if(game_board.previous_hand_card){
+							card = add_node_after(&game_board.hand, game_board.held_cards.first->data, game_board.previous_hand_card);
+							
+						}else{
+							card = add_node_to_beginning(&game_board.hand, game_board.held_cards.first->data);
+						}
+						
+						game_board.current_stock_card = card;
+						game_board.stock_cycle_completed = false;
+						
+					}
+					
+					clear_list(&game_board.held_cards);
+					game_board.is_hand_card_held = false;
+					
+				}else if(game_board.is_foundation_card_held){
+					//If a foundation card is being held and is not dropped on the tableau we return it to its origin.
+					if(maybe_add_card_to_tableau(&game_board, mouse_pos, card_list)){
+						set_undo_info(&game_board);
+						update_cards_origin(&game_board.held_cards, card_list);
+						add_node(card_list, *held_card);
+						return_to_origin = false;
+						calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+					}
+					
+					if(return_to_origin){
+						Card *card = &game_board.held_cards.first->data;
+						add_node(game_board.origin_foundation, *card);
+					}
+					
+					clear_list(&game_board.held_cards);
+					game_board.is_foundation_card_held = false;
 				}
+
 				
-				clear_list(&game_board.held_cards);
-				game_board.is_foundation_card_held = false;
+				// if(!return_to_origin){
+					// set_undo_info(&game_board);
+					
+				// }
+				
 			}
+			
+			
+			printf("%d\n", game_board.done_actions.size);
+            
             
             break;
         }
     }
+	
+	if(mouse.left.state == MOUSE_NONE){
+		Event e;
+		while(GetNextEvent(&e)){
+			if(e.key == GLFW_KEY_U && e.action == GLFW_PRESS){
+				undo_action(&game_board);
+				calculate_tableau_cards_positions_and_clickable_areas(&game_board);
+			}
+		 
+		}
+	}
     
-    
+	
 }
 
 void Game::DrawGame(float dt, float fps){
